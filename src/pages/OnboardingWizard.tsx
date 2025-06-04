@@ -306,15 +306,28 @@ const OnboardingWizard: React.FC = () => {
   const renderStep = () => {
     switch (state.step) {
       case 1:
+        return <WelcomeStep onNext={nextStep} currentTip={currentTip} />;
+      case 2:
         return (
-          <QuickStartStep
+          <LegalAgreementsStep
             onNext={nextStep}
             state={state}
-            updateState={updateState}
-            currentTip={currentTip}
+            onAgreementChange={handleAgreementChange}
           />
         );
-      case 2:
+      case 3:
+        return (
+          <AccountStep
+            onNext={nextStep}
+            email={state.email}
+            setEmail={(email) => updateState({ email })}
+            showPassword={showPassword}
+            setShowPassword={setShowPassword}
+            state={state}
+            updateState={updateState}
+          />
+        );
+      case 4:
         return (
           <BillDiscoveryStep
             onNext={nextStep}
@@ -324,7 +337,7 @@ const OnboardingWizard: React.FC = () => {
             isLoading={isLoading}
           />
         );
-      case 3:
+      case 5:
         return (
           <HouseholdSetupStep
             onNext={nextStep}
@@ -332,30 +345,12 @@ const OnboardingWizard: React.FC = () => {
             updateState={updateState}
           />
         );
-      case 4:
+      case 6:
         return (
           <PersonalizationStep
             onNext={nextStep}
             state={state}
             updateState={updateState}
-          />
-        );
-      case 5:
-        return (
-          <LegalAgreementsStep
-            onNext={nextStep}
-            state={state}
-            onAgreementChange={handleAgreementChange}
-          />
-        );
-      case 6:
-        return (
-          <AccountStep
-            onNext={nextStep}
-            email={state.email}
-            setEmail={(email) => updateState({ email })}
-            showPassword={showPassword}
-            setShowPassword={setShowPassword}
           />
         );
       case 7:
@@ -367,14 +362,7 @@ const OnboardingWizard: React.FC = () => {
           />
         );
       default:
-        return (
-          <QuickStartStep
-            onNext={nextStep}
-            state={state}
-            updateState={updateState}
-            currentTip={currentTip}
-          />
-        );
+        return <WelcomeStep onNext={nextStep} currentTip={currentTip} />;
     }
   };
 
@@ -455,18 +443,11 @@ const OnboardingWizard: React.FC = () => {
   );
 };
 
-// Step 1: Quick Start - Progressive Data Capture
-const QuickStartStep: React.FC<{
-  onNext: () => void;
-  currentTip: number;
-  state: OnboardingState;
-  updateState: (updates: Partial<OnboardingState>) => void;
-}> = ({ onNext, currentTip, state, updateState }) => {
-  const handleQuickStart = (method: "bank" | "gmail" | "manual") => {
-    updateState({ quickStartMethod: method });
-    setTimeout(onNext, 500); // Brief delay for visual feedback
-  };
-
+// Step 1: Welcome & Quick Start Method Selection (No data collection yet)
+const WelcomeStep: React.FC<{ onNext: () => void; currentTip: number }> = ({
+  onNext,
+  currentTip,
+}) => {
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
       <div className="max-w-md mx-auto space-y-8">
@@ -508,85 +489,17 @@ const QuickStartStep: React.FC<{
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.3 }}
           >
-            Get value in under 30 seconds. Choose your fastest setup method:
+            The smart way to manage and automate your bills. Join 50,000+ users
+            who never miss a payment.
           </motion.p>
         </div>
-
-        {/* Quick Start Options */}
-        <motion.div
-          className="space-y-3 w-full"
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.4 }}
-        >
-          <motion.button
-            onClick={() => handleQuickStart("bank")}
-            className="w-full flex items-center justify-between p-4 bg-white border-2 border-gray-200 rounded-lg hover:border-teal-300 hover:bg-teal-50 transition-all duration-200 group"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-200 transition-colors">
-                <CreditCard className="h-5 w-5 text-green-600" />
-              </div>
-              <div className="text-left">
-                <p className="font-semibold text-gray-900">
-                  Connect Bank Account
-                </p>
-                <p className="text-sm text-gray-500">
-                  Auto-discover 70%+ of your bills
-                </p>
-              </div>
-            </div>
-            <Badge className="bg-green-100 text-green-700">Recommended</Badge>
-          </motion.button>
-
-          <motion.button
-            onClick={() => handleQuickStart("gmail")}
-            className="w-full flex items-center justify-between p-4 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 group"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                <Mail className="h-5 w-5 text-blue-600" />
-              </div>
-              <div className="text-left">
-                <p className="font-semibold text-gray-900">Connect Email</p>
-                <p className="text-sm text-gray-500">
-                  Find e-bills from Gmail/Outlook
-                </p>
-              </div>
-            </div>
-            <Badge variant="secondary">Fast</Badge>
-          </motion.button>
-
-          <motion.button
-            onClick={() => handleQuickStart("manual")}
-            className="w-full flex items-center justify-between p-4 bg-white border-2 border-gray-200 rounded-lg hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 group"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center group-hover:bg-gray-200 transition-colors">
-                <FileText className="h-5 w-5 text-gray-600" />
-              </div>
-              <div className="text-left">
-                <p className="font-semibold text-gray-900">Manual Setup</p>
-                <p className="text-sm text-gray-500">
-                  Start fresh, add bills later
-                </p>
-              </div>
-            </div>
-          </motion.button>
-        </motion.div>
 
         {/* Rotating Tips */}
         <motion.div
           className="h-16 flex items-center justify-center"
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.5 }}
+          transition={{ delay: 0.4 }}
         >
           <AnimatePresence mode="wait">
             <motion.div
@@ -617,7 +530,7 @@ const QuickStartStep: React.FC<{
           className="flex items-center justify-center space-x-4 text-xs text-gray-500"
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.6 }}
+          transition={{ delay: 0.5 }}
         >
           <div className="flex items-center space-x-1">
             <Shield className="h-3 w-3" />
@@ -632,12 +545,623 @@ const QuickStartStep: React.FC<{
             <span>4.9/5 rating</span>
           </div>
         </motion.div>
+
+        {/* CTA */}
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.6 }}
+        >
+          <Button
+            onClick={onNext}
+            size="lg"
+            className="w-full bg-gradient-to-r from-teal-400 to-teal-500 hover:from-teal-500 hover:to-teal-600 text-white font-semibold py-4 text-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+          >
+            Get Started
+            <ArrowRight className="ml-2 h-5 w-5" />
+          </Button>
+        </motion.div>
       </div>
     </div>
   );
 };
 
-// Step 2: Bill Discovery with Smart Suggestions
+// Step 2: Legal Agreements (MOVED UP - Before any data collection!)
+const LegalAgreementsStep: React.FC<{
+  onNext: () => void;
+  state: OnboardingState;
+  onAgreementChange: (
+    agreementId: keyof OnboardingState["legalAgreements"],
+    checked: boolean,
+  ) => void;
+}> = ({ onNext, state, onAgreementChange }) => {
+  const [errors, setErrors] = useState<string[]>([]);
+
+  const requiredAgreements = legalAgreements.filter(
+    (agreement) => agreement.required,
+  );
+  const optionalAgreements = legalAgreements.filter(
+    (agreement) => !agreement.required,
+  );
+
+  const allRequiredAgreed = requiredAgreements.every(
+    (agreement) => state.legalAgreements[agreement.id],
+  );
+
+  const validateAndNext = () => {
+    const missingRequired = requiredAgreements
+      .filter((agreement) => !state.legalAgreements[agreement.id])
+      .map((agreement) => agreement.title);
+
+    if (missingRequired.length > 0) {
+      setErrors(["You must agree to all required terms to continue."]);
+      return;
+    }
+
+    setErrors([]);
+    onNext();
+  };
+
+  const getCategoryIcon = (category: LegalAgreement["category"]) => {
+    switch (category) {
+      case "core":
+        return <FileText className="h-4 w-4" />;
+      case "banking":
+        return <Lock className="h-4 w-4" />;
+      case "privacy":
+        return <Shield className="h-4 w-4" />;
+      case "communication":
+        return <Users className="h-4 w-4" />;
+    }
+  };
+
+  const getCategoryColor = (category: LegalAgreement["category"]) => {
+    switch (category) {
+      case "core":
+        return "bg-blue-100 text-blue-600";
+      case "banking":
+        return "bg-green-100 text-green-600";
+      case "privacy":
+        return "bg-purple-100 text-purple-600";
+      case "communication":
+        return "bg-orange-100 text-orange-600";
+    }
+  };
+
+  return (
+    <div className="flex-1 flex flex-col p-6">
+      <div className="max-w-2xl mx-auto w-full space-y-6 flex-1 flex flex-col">
+        <motion.div
+          className="text-center space-y-4"
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+        >
+          <div className="flex items-center justify-center space-x-2">
+            <Shield className="h-8 w-8 text-teal-600" />
+            <h2 className="text-2xl font-bold text-navy-900 font-display">
+              Terms & Privacy
+            </h2>
+          </div>
+          <p className="text-gray-600">
+            Before we begin, please review and accept our terms. This ensures
+            your data is protected.
+          </p>
+          <div className="bg-teal-50 border border-teal-200 rounded-lg p-3">
+            <div className="flex items-center space-x-2">
+              <Shield className="h-4 w-4 text-teal-600" />
+              <p className="text-sm text-teal-800 font-medium">
+                ✓ No data collection until you agree to these terms
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div
+          className="flex-1"
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.1 }}
+        >
+          <ScrollArea className="h-96 pr-4">
+            <div className="space-y-6">
+              {/* Required Agreements */}
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <AlertTriangle className="h-5 w-5 text-red-500" />
+                  <h3 className="font-semibold text-gray-900">
+                    Required Agreements
+                  </h3>
+                  <Badge variant="destructive" className="text-xs">
+                    Required
+                  </Badge>
+                </div>
+
+                <div className="space-y-3">
+                  {requiredAgreements.map((agreement) => (
+                    <motion.div
+                      key={agreement.id}
+                      className={cn(
+                        "border rounded-lg p-4 transition-all duration-200",
+                        state.legalAgreements[agreement.id]
+                          ? "border-teal-300 bg-teal-50"
+                          : "border-gray-200 hover:border-gray-300",
+                      )}
+                      whileHover={{ scale: 1.01 }}
+                    >
+                      <div className="flex items-start space-x-3">
+                        <Checkbox
+                          id={agreement.id}
+                          checked={state.legalAgreements[agreement.id]}
+                          onCheckedChange={(checked) =>
+                            onAgreementChange(agreement.id, checked as boolean)
+                          }
+                          className="mt-1"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center space-x-2 mb-2">
+                            <div
+                              className={cn(
+                                "p-1 rounded",
+                                getCategoryColor(agreement.category),
+                              )}
+                            >
+                              {getCategoryIcon(agreement.category)}
+                            </div>
+                            <h4 className="font-semibold text-gray-900">
+                              {agreement.title}
+                            </h4>
+                            <Badge variant="outline" className="text-xs">
+                              v{agreement.version}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-gray-600 mb-3">
+                            {agreement.description}
+                          </p>
+                          <div className="flex items-center justify-between">
+                            <button
+                              type="button"
+                              className="text-sm text-teal-600 hover:text-teal-700 flex items-center space-x-1"
+                              onClick={() =>
+                                window.open(agreement.documentUrl, "_blank")
+                              }
+                            >
+                              <span>Read full document</span>
+                              <ExternalLink className="h-3 w-3" />
+                            </button>
+                            {state.agreementTimestamps[agreement.id] && (
+                              <span className="text-xs text-gray-500">
+                                Agreed:{" "}
+                                {new Date(
+                                  state.agreementTimestamps[agreement.id],
+                                ).toLocaleTimeString()}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Optional Agreements */}
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <Users className="h-5 w-5 text-blue-500" />
+                  <h3 className="font-semibold text-gray-900">
+                    Optional Consents
+                  </h3>
+                  <Badge variant="secondary" className="text-xs">
+                    Optional
+                  </Badge>
+                </div>
+
+                <div className="space-y-3">
+                  {optionalAgreements.map((agreement) => (
+                    <motion.div
+                      key={agreement.id}
+                      className={cn(
+                        "border rounded-lg p-4 transition-all duration-200",
+                        state.legalAgreements[agreement.id]
+                          ? "border-blue-300 bg-blue-50"
+                          : "border-gray-200 hover:border-gray-300",
+                      )}
+                      whileHover={{ scale: 1.01 }}
+                    >
+                      <div className="flex items-start space-x-3">
+                        <Checkbox
+                          id={agreement.id}
+                          checked={state.legalAgreements[agreement.id]}
+                          onCheckedChange={(checked) =>
+                            onAgreementChange(agreement.id, checked as boolean)
+                          }
+                          className="mt-1"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center space-x-2 mb-2">
+                            <div
+                              className={cn(
+                                "p-1 rounded",
+                                getCategoryColor(agreement.category),
+                              )}
+                            >
+                              {getCategoryIcon(agreement.category)}
+                            </div>
+                            <h4 className="font-semibold text-gray-900">
+                              {agreement.title}
+                            </h4>
+                            <Badge variant="outline" className="text-xs">
+                              v{agreement.version}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-gray-600 mb-3">
+                            {agreement.description}
+                          </p>
+                          <button
+                            type="button"
+                            className="text-sm text-teal-600 hover:text-teal-700 flex items-center space-x-1"
+                            onClick={() =>
+                              window.open(agreement.documentUrl, "_blank")
+                            }
+                          >
+                            <span>Read full document</span>
+                            <ExternalLink className="h-3 w-3" />
+                          </button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </ScrollArea>
+        </motion.div>
+
+        {/* Errors */}
+        {errors.length > 0 && (
+          <motion.div
+            className="bg-red-50 border border-red-200 rounded-lg p-4"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <div className="flex items-center space-x-2">
+              <AlertTriangle className="h-5 w-5 text-red-500" />
+              <div>
+                {errors.map((error, index) => (
+                  <p key={index} className="text-sm text-red-700">
+                    {error}
+                  </p>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Continue Button */}
+        <motion.div
+          className="sticky bottom-0 bg-white pt-4 border-t border-gray-200"
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
+          <Button
+            onClick={validateAndNext}
+            disabled={!allRequiredAgreed}
+            className="w-full bg-gradient-to-r from-teal-400 to-teal-500 hover:from-teal-500 hover:to-teal-600 transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+          >
+            {allRequiredAgreed
+              ? "Continue to Account Setup"
+              : "Accept Required Terms to Continue"}
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+          <p className="text-xs text-gray-500 text-center mt-2">
+            By continuing, you acknowledge that you have read, understood, and
+            agree to the selected terms.
+          </p>
+        </motion.div>
+      </div>
+    </div>
+  );
+};
+
+// Step 3: Enhanced Account Creation (WITH restored OAuth options!)
+const AccountStep: React.FC<{
+  onNext: () => void;
+  email: string;
+  setEmail: (email: string) => void;
+  showPassword: boolean;
+  setShowPassword: (show: boolean) => void;
+  state: OnboardingState;
+  updateState: (updates: Partial<OnboardingState>) => void;
+}> = ({
+  onNext,
+  email,
+  setEmail,
+  showPassword,
+  setShowPassword,
+  state,
+  updateState,
+}) => {
+  const [password, setPassword] = useState("");
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [passwordStrength, setPasswordStrength] = useState(0);
+
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const calculatePasswordStrength = (password: string) => {
+    let strength = 0;
+    if (password.length >= 8) strength += 25;
+    if (/[A-Z]/.test(password)) strength += 25;
+    if (/[0-9]/.test(password)) strength += 25;
+    if (/[^A-Za-z0-9]/.test(password)) strength += 25;
+    return strength;
+  };
+
+  useEffect(() => {
+    setPasswordStrength(calculatePasswordStrength(password));
+  }, [password]);
+
+  const validateAndNext = () => {
+    const newErrors: { [key: string]: string } = {};
+
+    if (!email) {
+      newErrors.email = "Email is required";
+    } else if (!validateEmail(email)) {
+      newErrors.email = "Please enter a valid email address";
+    }
+
+    if (!password) {
+      newErrors.password = "Password is required";
+    } else if (password.length < 8) {
+      newErrors.password = "Password must be at least 8 characters";
+    }
+
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length === 0) {
+      onNext();
+    }
+  };
+
+  const handleOAuthSignup = (provider: "google" | "facebook") => {
+    // In a real app, this would initiate OAuth flow
+    console.log(`OAuth signup with ${provider}`);
+    // For demo, auto-fill some data and continue
+    if (provider === "google") {
+      setEmail("user@gmail.com");
+      updateState({
+        firstName: "John",
+        quickStartMethod: "gmail", // Pre-select gmail for discovery
+      });
+    } else {
+      setEmail("user@facebook.com");
+      updateState({
+        firstName: "John",
+      });
+    }
+    // Skip to next step after OAuth
+    setTimeout(onNext, 1000);
+  };
+
+  const getStrengthColor = (strength: number) => {
+    if (strength <= 25) return "bg-red-500";
+    if (strength <= 50) return "bg-yellow-500";
+    if (strength <= 75) return "bg-blue-500";
+    return "bg-green-500";
+  };
+
+  const getStrengthText = (strength: number) => {
+    if (strength <= 25) return "Weak";
+    if (strength <= 50) return "Fair";
+    if (strength <= 75) return "Good";
+    return "Strong";
+  };
+
+  return (
+    <div className="flex-1 flex flex-col p-6">
+      <div className="max-w-sm mx-auto w-full space-y-6 flex-1 flex flex-col justify-center">
+        <motion.div
+          className="text-center space-y-2"
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+        >
+          <h2 className="text-2xl font-bold text-navy-900 font-display">
+            Create Your Account
+          </h2>
+          <p className="text-gray-600">Choose your preferred signup method</p>
+        </motion.div>
+
+        <motion.div
+          className="space-y-4"
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.1 }}
+        >
+          {/* OAuth Buttons - RESTORED! */}
+          <div className="space-y-3">
+            <motion.button
+              onClick={() => handleOAuthSignup("google")}
+              className="w-full flex items-center justify-center space-x-3 bg-white border-2 border-gray-200 rounded-lg py-3 px-4 hover:border-gray-300 hover:bg-gray-50 transition-all duration-200"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <div className="w-5 h-5 bg-red-500 rounded-sm flex items-center justify-center text-white text-xs font-bold">
+                G
+              </div>
+              <span className="font-medium text-gray-700">
+                Continue with Google
+              </span>
+              <Badge
+                variant="secondary"
+                className="bg-green-100 text-green-700 ml-auto"
+              >
+                Fastest
+              </Badge>
+            </motion.button>
+
+            <motion.button
+              onClick={() => handleOAuthSignup("facebook")}
+              className="w-full flex items-center justify-center space-x-3 bg-blue-600 text-white rounded-lg py-3 px-4 hover:bg-blue-700 transition-all duration-200"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <div className="w-5 h-5 bg-white rounded-sm flex items-center justify-center text-blue-600 text-xs font-bold">
+                f
+              </div>
+              <span className="font-medium">Continue with Facebook</span>
+            </motion.button>
+
+            {/* Divider */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-200" />
+              </div>
+              <div className="relative flex justify-center text-xs">
+                <span className="bg-white px-2 text-gray-500">
+                  Or create with email
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Email Input */}
+          <div className="space-y-2">
+            <label
+              htmlFor="email"
+              className="text-sm font-medium text-gray-700"
+            >
+              Email Address *
+            </label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (errors.email) setErrors((prev) => ({ ...prev, email: "" }));
+              }}
+              className={cn(
+                "w-full transition-all duration-200",
+                errors.email
+                  ? "border-red-300 focus:border-red-500"
+                  : "focus:border-teal-500",
+              )}
+            />
+            {errors.email && (
+              <p className="text-sm text-red-600">{errors.email}</p>
+            )}
+          </div>
+
+          {/* Password Input */}
+          <div className="space-y-2">
+            <label
+              htmlFor="password"
+              className="text-sm font-medium text-gray-700"
+            >
+              Password *
+            </label>
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Create a strong password"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (errors.password)
+                    setErrors((prev) => ({ ...prev, password: "" }));
+                }}
+                className={cn(
+                  "w-full pr-10 transition-all duration-200",
+                  errors.password
+                    ? "border-red-300 focus:border-red-500"
+                    : "focus:border-teal-500",
+                )}
+              />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4 text-gray-400" />
+                ) : (
+                  <Eye className="h-4 w-4 text-gray-400" />
+                )}
+              </button>
+            </div>
+
+            {/* Password Strength Indicator */}
+            {password && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-500">
+                    Password strength
+                  </span>
+                  <span
+                    className={cn(
+                      "text-xs font-medium",
+                      passwordStrength <= 25
+                        ? "text-red-600"
+                        : passwordStrength <= 50
+                          ? "text-yellow-600"
+                          : passwordStrength <= 75
+                            ? "text-blue-600"
+                            : "text-green-600",
+                    )}
+                  >
+                    {getStrengthText(passwordStrength)}
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-1.5">
+                  <motion.div
+                    className={cn(
+                      "h-1.5 rounded-full transition-all duration-300",
+                      getStrengthColor(passwordStrength),
+                    )}
+                    initial={{ width: 0 }}
+                    animate={{ width: `${passwordStrength}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {errors.password && (
+              <p className="text-sm text-red-600">{errors.password}</p>
+            )}
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
+          <Button
+            onClick={validateAndNext}
+            className="w-full bg-gradient-to-r from-teal-400 to-teal-500 hover:from-teal-500 hover:to-teal-600 transition-all duration-200 transform hover:scale-105"
+          >
+            Create Account
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+
+          <p className="text-xs text-gray-500 text-center mt-3">
+            By creating an account, you confirm you have agreed to our Terms of
+            Service and Privacy Policy.
+          </p>
+        </motion.div>
+      </div>
+    </div>
+  );
+};
+
+// Step 4: Bill Discovery (Now happens AFTER legal agreements and account creation)
 const BillDiscoveryStep: React.FC<{
   onNext: () => void;
   state: OnboardingState;
@@ -712,16 +1236,13 @@ const BillDiscoveryStep: React.FC<{
   };
 
   const startDiscovery = () => {
-    if (state.quickStartMethod === "bank") {
-      mockDiscovery();
-    } else if (state.quickStartMethod === "gmail") {
-      // Gmail OAuth simulation
-      setTimeout(() => {
-        mockDiscovery();
-      }, 1500);
-    } else {
-      onNext();
-    }
+    updateState({ quickStartMethod: "bank" }); // Set the method when they choose
+    mockDiscovery();
+  };
+
+  const skipDiscovery = () => {
+    updateState({ quickStartMethod: "manual" });
+    onNext();
   };
 
   const confirmBill = (billId: string) => {
@@ -753,56 +1274,59 @@ const BillDiscoveryStep: React.FC<{
               Discover Your Bills
             </h2>
             <p className="text-gray-600">
-              {state.quickStartMethod === "bank" &&
-                "We'll analyze your transactions to find recurring bills"}
-              {state.quickStartMethod === "gmail" &&
-                "We'll scan your email for e-bills and subscriptions"}
-              {state.quickStartMethod === "manual" &&
-                "Skip discovery and add bills manually"}
+              Now that you're set up, let's find your bills automatically
             </p>
           </div>
 
-          {state.quickStartMethod !== "manual" && (
-            <div className="bg-teal-50 border border-teal-200 rounded-lg p-4 text-left">
-              <div className="flex items-start space-x-2">
-                <Lightbulb className="h-4 w-4 text-teal-600 mt-0.5" />
-                <div className="text-sm">
-                  <p className="font-medium text-teal-800">
-                    What we'll access:
+          <div className="space-y-3">
+            <motion.button
+              onClick={startDiscovery}
+              className="w-full flex items-center justify-between p-4 bg-white border-2 border-gray-200 rounded-lg hover:border-teal-300 hover:bg-teal-50 transition-all duration-200"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                  <CreditCard className="h-5 w-5 text-green-600" />
+                </div>
+                <div className="text-left">
+                  <p className="font-semibold text-gray-900">
+                    Connect Bank Account
                   </p>
-                  <ul className="text-teal-700 mt-1 space-y-1">
-                    {state.quickStartMethod === "bank" && (
-                      <>
-                        <li>• Transaction history (read-only)</li>
-                        <li>• Account balances</li>
-                        <li>• Recurring payment patterns</li>
-                      </>
-                    )}
-                    {state.quickStartMethod === "gmail" && (
-                      <>
-                        <li>• E-bills and receipts</li>
-                        <li>• Subscription confirmations</li>
-                        <li>• Payment notifications</li>
-                      </>
-                    )}
-                  </ul>
-                  <p className="text-xs text-teal-600 mt-2">
-                    We use Plaid—bank-level security, read-only access
+                  <p className="text-sm text-gray-500">
+                    Auto-discover 70%+ of your bills
                   </p>
                 </div>
               </div>
-            </div>
-          )}
+              <Badge className="bg-green-100 text-green-700">Recommended</Badge>
+            </motion.button>
 
-          <Button
-            onClick={startDiscovery}
-            className="w-full bg-gradient-to-r from-teal-400 to-teal-500 hover:from-teal-500 hover:to-teal-600"
-          >
-            {state.quickStartMethod === "bank" && "Connect Bank Account"}
-            {state.quickStartMethod === "gmail" && "Connect Email"}
-            {state.quickStartMethod === "manual" && "Skip Discovery"}
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
+            <motion.button
+              onClick={skipDiscovery}
+              className="w-full flex items-center justify-center p-3 text-gray-600 hover:text-gray-800 transition-colors"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              Skip for now, I'll add bills manually
+            </motion.button>
+          </div>
+
+          <div className="bg-teal-50 border border-teal-200 rounded-lg p-4 text-left">
+            <div className="flex items-start space-x-2">
+              <Shield className="h-4 w-4 text-teal-600 mt-0.5" />
+              <div className="text-sm">
+                <p className="font-medium text-teal-800">What we'll access:</p>
+                <ul className="text-teal-700 mt-1 space-y-1">
+                  <li>• Transaction history (read-only)</li>
+                  <li>• Account balances</li>
+                  <li>• Recurring payment patterns</li>
+                </ul>
+                <p className="text-xs text-teal-600 mt-2">
+                  We use Plaid—bank-level security, read-only access
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -914,7 +1438,7 @@ const BillDiscoveryStep: React.FC<{
   );
 };
 
-// Step 3: Household Setup
+// Step 5: Household Setup (Same as before)
 const HouseholdSetupStep: React.FC<{
   onNext: () => void;
   state: OnboardingState;
@@ -1052,7 +1576,7 @@ const HouseholdSetupStep: React.FC<{
   );
 };
 
-// Step 4: Personalization (Enhanced)
+// Step 6: Personalization (Same as before)
 const PersonalizationStep: React.FC<{
   onNext: () => void;
   state: OnboardingState;
@@ -1225,241 +1749,6 @@ const PersonalizationStep: React.FC<{
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </motion.div>
-      </div>
-    </div>
-  );
-};
-
-// Step 5: Legal Agreements (kept same as before but condensed for space)
-const LegalAgreementsStep: React.FC<{
-  onNext: () => void;
-  state: OnboardingState;
-  onAgreementChange: (
-    agreementId: keyof OnboardingState["legalAgreements"],
-    checked: boolean,
-  ) => void;
-}> = ({ onNext, state, onAgreementChange }) => {
-  const [errors, setErrors] = useState<string[]>([]);
-
-  const requiredAgreements = legalAgreements.filter(
-    (agreement) => agreement.required,
-  );
-  const allRequiredAgreed = requiredAgreements.every(
-    (agreement) => state.legalAgreements[agreement.id],
-  );
-
-  const validateAndNext = () => {
-    if (!allRequiredAgreed) {
-      setErrors(["You must agree to all required terms to continue."]);
-      return;
-    }
-    setErrors([]);
-    onNext();
-  };
-
-  return (
-    <div className="flex-1 flex flex-col p-6">
-      <div className="max-w-2xl mx-auto w-full space-y-6 flex-1 flex flex-col">
-        <motion.div
-          className="text-center space-y-4"
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-        >
-          <div className="flex items-center justify-center space-x-2">
-            <Shield className="h-8 w-8 text-teal-600" />
-            <h2 className="text-2xl font-bold text-navy-900 font-display">
-              Legal Agreements
-            </h2>
-          </div>
-          <p className="text-gray-600">
-            Please review and accept our terms to continue
-          </p>
-        </motion.div>
-
-        <motion.div
-          className="flex-1"
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.1 }}
-        >
-          <ScrollArea className="h-96 pr-4">
-            <div className="space-y-4">
-              {requiredAgreements.map((agreement) => (
-                <motion.div
-                  key={agreement.id}
-                  className={cn(
-                    "border rounded-lg p-4 transition-all duration-200",
-                    state.legalAgreements[agreement.id]
-                      ? "border-teal-300 bg-teal-50"
-                      : "border-gray-200 hover:border-gray-300",
-                  )}
-                  whileHover={{ scale: 1.01 }}
-                >
-                  <div className="flex items-start space-x-3">
-                    <Checkbox
-                      id={agreement.id}
-                      checked={state.legalAgreements[agreement.id]}
-                      onCheckedChange={(checked) =>
-                        onAgreementChange(agreement.id, checked as boolean)
-                      }
-                      className="mt-1"
-                    />
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-gray-900">
-                        {agreement.title}
-                      </h4>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {agreement.description}
-                      </p>
-                      <button
-                        type="button"
-                        className="text-sm text-teal-600 hover:text-teal-700 flex items-center space-x-1 mt-2"
-                        onClick={() =>
-                          window.open(agreement.documentUrl, "_blank")
-                        }
-                      >
-                        <span>Read full document</span>
-                        <ExternalLink className="h-3 w-3" />
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </ScrollArea>
-        </motion.div>
-
-        {errors.length > 0 && (
-          <motion.div
-            className="bg-red-50 border border-red-200 rounded-lg p-4"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <div className="flex items-center space-x-2">
-              <AlertTriangle className="h-5 w-5 text-red-500" />
-              <p className="text-sm text-red-700">{errors[0]}</p>
-            </div>
-          </motion.div>
-        )}
-
-        <Button
-          onClick={validateAndNext}
-          disabled={!allRequiredAgreed}
-          className="w-full bg-gradient-to-r from-teal-400 to-teal-500 hover:from-teal-500 hover:to-teal-600 disabled:opacity-50"
-        >
-          {allRequiredAgreed
-            ? "Continue to Account Setup"
-            : "Accept Required Terms to Continue"}
-          <ArrowRight className="ml-2 h-4 w-4" />
-        </Button>
-      </div>
-    </div>
-  );
-};
-
-// Step 6: Account Creation (condensed)
-const AccountStep: React.FC<{
-  onNext: () => void;
-  email: string;
-  setEmail: (email: string) => void;
-  showPassword: boolean;
-  setShowPassword: (show: boolean) => void;
-}> = ({ onNext, email, setEmail, showPassword, setShowPassword }) => {
-  const [password, setPassword] = useState("");
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
-
-  const validateAndNext = () => {
-    const newErrors: { [key: string]: string } = {};
-
-    if (!email || !email.includes("@")) {
-      newErrors.email = "Please enter a valid email address";
-    }
-
-    if (!password || password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters";
-    }
-
-    setErrors(newErrors);
-
-    if (Object.keys(newErrors).length === 0) {
-      onNext();
-    }
-  };
-
-  return (
-    <div className="flex-1 flex flex-col p-6">
-      <div className="max-w-sm mx-auto w-full space-y-6 flex-1 flex flex-col justify-center">
-        <div className="text-center space-y-2">
-          <h2 className="text-2xl font-bold text-navy-900 font-display">
-            Create Your Account
-          </h2>
-          <p className="text-gray-600">
-            Secure your financial future with BillBuddy
-          </p>
-        </div>
-
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <label
-              htmlFor="email"
-              className="text-sm font-medium text-gray-700"
-            >
-              Email Address *
-            </label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full focus:border-teal-500"
-            />
-            {errors.email && (
-              <p className="text-sm text-red-600">{errors.email}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <label
-              htmlFor="password"
-              className="text-sm font-medium text-gray-700"
-            >
-              Password *
-            </label>
-            <div className="relative">
-              <Input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                placeholder="Create a strong password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full pr-10 focus:border-teal-500"
-              />
-              <button
-                type="button"
-                className="absolute right-3 top-1/2 transform -translate-y-1/2"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4 text-gray-400" />
-                ) : (
-                  <Eye className="h-4 w-4 text-gray-400" />
-                )}
-              </button>
-            </div>
-            {errors.password && (
-              <p className="text-sm text-red-600">{errors.password}</p>
-            )}
-          </div>
-        </div>
-
-        <Button
-          onClick={validateAndNext}
-          className="w-full bg-gradient-to-r from-teal-400 to-teal-500 hover:from-teal-500 hover:to-teal-600"
-        >
-          Create Account
-          <ArrowRight className="ml-2 h-4 w-4" />
-        </Button>
       </div>
     </div>
   );
