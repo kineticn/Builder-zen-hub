@@ -10,6 +10,7 @@ import OnboardingWizard from "./pages/OnboardingWizard";
 import Dashboard from "./pages/Dashboard";
 import BillDetail from "./pages/BillDetail";
 import AdminDashboard from "./pages/AdminDashboard";
+import LegalComplianceAdmin from "./pages/LegalComplianceAdmin";
 import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
@@ -27,6 +28,10 @@ const App = () => (
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/bill/:id" element={<BillDetail />} />
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route
+              path="/admin/legal-compliance"
+              element={<LegalComplianceAdmin />}
+            />
             <Route path="/settings" element={<Settings />} />
             <Route path="/activity" element={<Dashboard />} />
             <Route path="/offers" element={<Dashboard />} />
