@@ -21,6 +21,14 @@ import {
   AlertTriangle,
   ExternalLink,
   Calendar,
+  MapPin,
+  Globe,
+  Mail,
+  Building,
+  Home,
+  UserCheck,
+  CreditCard,
+  Lightbulb,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,15 +37,30 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface OnboardingState {
   step: number;
+  quickStartMethod: "bank" | "gmail" | "manual" | "";
   email: string;
   firstName: string;
   monthlyIncome: string;
   billFrequency: "weekly" | "monthly" | "varies";
+  householdType: "home" | "rental" | "parents" | "shared" | "";
+  address: {
+    street: string;
+    city: string;
+    state: string;
+    zip: string;
+  };
   ocrText: string;
   legalAgreements: {
     termsOfService: boolean;
@@ -52,6 +75,13 @@ interface OnboardingState {
   };
   isComplete: boolean;
   hasSeenTips: boolean;
+  discoveredBills: Array<{
+    id: string;
+    name: string;
+    amount: number;
+    confidence: number;
+    source: "plaid" | "gmail" | "suggestion";
+  }>;
 }
 
 interface Tip {
@@ -137,23 +167,22 @@ const legalAgreements: LegalAgreement[] = [
 const tips: Tip[] = [
   {
     icon: <Brain className="h-5 w-5" />,
-    title: "AI-Powered Insights",
+    title: "AI-Powered Discovery",
     description:
-      "Our smart algorithm learns your spending patterns and suggests optimizations",
+      "Connect your bank or email and we'll find 70%+ of your bills automatically",
     color: "bg-purple-100 text-purple-600",
   },
   {
     icon: <Zap className="h-5 w-5" />,
-    title: "Never Miss a Payment",
-    description:
-      "Automatic bill detection and smart reminders keep you on track",
+    title: "30-Second Setup",
+    description: "Get value immediately - detailed setup can wait until later",
     color: "bg-yellow-100 text-yellow-600",
   },
   {
     icon: <Shield className="h-5 w-5" />,
     title: "Bank-Level Security",
     description:
-      "256-bit encryption and multi-factor authentication protect your data",
+      "We use Plaid—bank-level security with read-only access to your data",
     color: "bg-green-100 text-green-600",
   },
 ];
@@ -162,10 +191,18 @@ const OnboardingWizard: React.FC = () => {
   const navigate = useNavigate();
   const [state, setState] = useState<OnboardingState>({
     step: 1,
+    quickStartMethod: "",
     email: "",
     firstName: "",
     monthlyIncome: "",
     billFrequency: "monthly",
+    householdType: "",
+    address: {
+      street: "",
+      city: "",
+      state: "",
+      zip: "",
+    },
     ocrText: "",
     legalAgreements: {
       termsOfService: false,
@@ -178,16 +215,18 @@ const OnboardingWizard: React.FC = () => {
     agreementTimestamps: {},
     isComplete: false,
     hasSeenTips: false,
+    discoveredBills: [],
   });
   const [currentTip, setCurrentTip] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const updateState = (updates: Partial<OnboardingState>) => {
     setState((prev) => ({ ...prev, ...updates }));
   };
 
   const nextStep = () => {
-    if (state.step < 6) {
+    if (state.step < 7) {
       updateState({ step: state.step + 1 });
     }
   };
@@ -199,17 +238,20 @@ const OnboardingWizard: React.FC = () => {
       completedAt: new Date().toISOString(),
       agreements: state.legalAgreements,
       agreementTimestamps: state.agreementTimestamps,
-      ipAddress: "127.0.0.1", // In real app, get actual IP
+      ipAddress: "127.0.0.1",
       userAgent: navigator.userAgent,
+      quickStartMethod: state.quickStartMethod,
+      householdType: state.householdType,
+      discoveredBills: state.discoveredBills,
     };
 
-    // Store completion data (in real app, send to backend)
     localStorage.setItem(
       "billbuddy_legal_compliance",
       JSON.stringify(completionData),
     );
     localStorage.setItem("billbuddy_onboarding_complete", "true");
     localStorage.setItem("billbuddy_user_name", state.firstName);
+    localStorage.setItem("billbuddy_household_type", state.householdType);
 
     navigate("/dashboard");
   };
@@ -244,11 +286,53 @@ const OnboardingWizard: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Auto-populate address from GPS/device
+  useEffect(() => {
+    if (state.quickStartMethod && !state.address.zip) {
+      // Simulate location detection
+      setTimeout(() => {
+        updateState({
+          address: {
+            street: "",
+            city: "San Francisco",
+            state: "CA",
+            zip: "94105",
+          },
+        });
+      }, 1000);
+    }
+  }, [state.quickStartMethod]);
+
   const renderStep = () => {
     switch (state.step) {
       case 1:
-        return <WelcomeStep onNext={nextStep} currentTip={currentTip} />;
+        return (
+          <QuickStartStep
+            onNext={nextStep}
+            state={state}
+            updateState={updateState}
+            currentTip={currentTip}
+          />
+        );
       case 2:
+        return (
+          <BillDiscoveryStep
+            onNext={nextStep}
+            state={state}
+            updateState={updateState}
+            setIsLoading={setIsLoading}
+            isLoading={isLoading}
+          />
+        );
+      case 3:
+        return (
+          <HouseholdSetupStep
+            onNext={nextStep}
+            state={state}
+            updateState={updateState}
+          />
+        );
+      case 4:
         return (
           <PersonalizationStep
             onNext={nextStep}
@@ -256,7 +340,7 @@ const OnboardingWizard: React.FC = () => {
             updateState={updateState}
           />
         );
-      case 3:
+      case 5:
         return (
           <LegalAgreementsStep
             onNext={nextStep}
@@ -264,7 +348,7 @@ const OnboardingWizard: React.FC = () => {
             onAgreementChange={handleAgreementChange}
           />
         );
-      case 4:
+      case 6:
         return (
           <AccountStep
             onNext={nextStep}
@@ -274,23 +358,23 @@ const OnboardingWizard: React.FC = () => {
             setShowPassword={setShowPassword}
           />
         );
-      case 5:
+      case 7:
         return (
-          <BillScanStep
-            onNext={nextStep}
-            ocrText={state.ocrText}
-            setOcrText={(ocrText) => updateState({ ocrText })}
-          />
-        );
-      case 6:
-        return (
-          <BankLinkStep
+          <CompletionStep
             onComplete={goToDashboard}
             firstName={state.firstName}
+            discoveredBills={state.discoveredBills}
           />
         );
       default:
-        return <WelcomeStep onNext={nextStep} currentTip={currentTip} />;
+        return (
+          <QuickStartStep
+            onNext={nextStep}
+            state={state}
+            updateState={updateState}
+            currentTip={currentTip}
+          />
+        );
     }
   };
 
@@ -333,10 +417,10 @@ const OnboardingWizard: React.FC = () => {
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5 }}
       >
-        <ProgressBar current={state.step} total={6} showSteps />
+        <ProgressBar current={state.step} total={7} showSteps />
         <div className="flex justify-center mt-2">
           <div className="flex space-x-2">
-            {Array.from({ length: 6 }, (_, i) => (
+            {Array.from({ length: 7 }, (_, i) => (
               <motion.div
                 key={i}
                 className={cn(
@@ -371,33 +455,40 @@ const OnboardingWizard: React.FC = () => {
   );
 };
 
-// Step 1: Enhanced Welcome with rotating tips
-const WelcomeStep: React.FC<{ onNext: () => void; currentTip: number }> = ({
-  onNext,
-  currentTip,
-}) => {
+// Step 1: Quick Start - Progressive Data Capture
+const QuickStartStep: React.FC<{
+  onNext: () => void;
+  currentTip: number;
+  state: OnboardingState;
+  updateState: (updates: Partial<OnboardingState>) => void;
+}> = ({ onNext, currentTip, state, updateState }) => {
+  const handleQuickStart = (method: "bank" | "gmail" | "manual") => {
+    updateState({ quickStartMethod: method });
+    setTimeout(onNext, 500); // Brief delay for visual feedback
+  };
+
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-      <div className="max-w-sm mx-auto space-y-8">
+      <div className="max-w-md mx-auto space-y-8">
         {/* Animated Logo */}
         <motion.div
-          className="w-24 h-24 bg-gradient-to-br from-teal-400 to-navy-600 rounded-2xl flex items-center justify-center mx-auto relative"
+          className="w-20 h-20 bg-gradient-to-br from-teal-400 to-navy-600 rounded-2xl flex items-center justify-center mx-auto relative"
           animate={{
-            rotate: [0, 360],
             scale: [1, 1.05, 1],
           }}
           transition={{
-            rotate: { duration: 20, repeat: Infinity, ease: "linear" },
-            scale: { duration: 4, repeat: Infinity, ease: "easeInOut" },
+            duration: 4,
+            repeat: Infinity,
+            ease: "easeInOut",
           }}
         >
-          <span className="text-2xl font-bold text-white">BB</span>
+          <span className="text-xl font-bold text-white">BB</span>
           <motion.div
-            className="absolute -top-2 -right-2 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center"
+            className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-400 rounded-full flex items-center justify-center"
             animate={{ scale: [1, 1.2, 1] }}
             transition={{ duration: 2, repeat: Infinity }}
           >
-            <Sparkles className="h-3 w-3 text-yellow-700" />
+            <Sparkles className="h-2.5 w-2.5 text-yellow-700" />
           </motion.div>
         </motion.div>
 
@@ -417,17 +508,85 @@ const WelcomeStep: React.FC<{ onNext: () => void; currentTip: number }> = ({
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.3 }}
           >
-            The smart way to manage and automate your bills. Join 50,000+ users
-            who never miss a payment.
+            Get value in under 30 seconds. Choose your fastest setup method:
           </motion.p>
         </div>
 
-        {/* Rotating Tips */}
+        {/* Quick Start Options */}
         <motion.div
-          className="h-20 flex items-center justify-center"
+          className="space-y-3 w-full"
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.4 }}
+        >
+          <motion.button
+            onClick={() => handleQuickStart("bank")}
+            className="w-full flex items-center justify-between p-4 bg-white border-2 border-gray-200 rounded-lg hover:border-teal-300 hover:bg-teal-50 transition-all duration-200 group"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-200 transition-colors">
+                <CreditCard className="h-5 w-5 text-green-600" />
+              </div>
+              <div className="text-left">
+                <p className="font-semibold text-gray-900">
+                  Connect Bank Account
+                </p>
+                <p className="text-sm text-gray-500">
+                  Auto-discover 70%+ of your bills
+                </p>
+              </div>
+            </div>
+            <Badge className="bg-green-100 text-green-700">Recommended</Badge>
+          </motion.button>
+
+          <motion.button
+            onClick={() => handleQuickStart("gmail")}
+            className="w-full flex items-center justify-between p-4 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 group"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                <Mail className="h-5 w-5 text-blue-600" />
+              </div>
+              <div className="text-left">
+                <p className="font-semibold text-gray-900">Connect Email</p>
+                <p className="text-sm text-gray-500">
+                  Find e-bills from Gmail/Outlook
+                </p>
+              </div>
+            </div>
+            <Badge variant="secondary">Fast</Badge>
+          </motion.button>
+
+          <motion.button
+            onClick={() => handleQuickStart("manual")}
+            className="w-full flex items-center justify-between p-4 bg-white border-2 border-gray-200 rounded-lg hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 group"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center group-hover:bg-gray-200 transition-colors">
+                <FileText className="h-5 w-5 text-gray-600" />
+              </div>
+              <div className="text-left">
+                <p className="font-semibold text-gray-900">Manual Setup</p>
+                <p className="text-sm text-gray-500">
+                  Start fresh, add bills later
+                </p>
+              </div>
+            </div>
+          </motion.button>
+        </motion.div>
+
+        {/* Rotating Tips */}
+        <motion.div
+          className="h-16 flex items-center justify-center"
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.5 }}
         >
           <AnimatePresence mode="wait">
             <motion.div
@@ -436,16 +595,16 @@ const WelcomeStep: React.FC<{ onNext: () => void; currentTip: number }> = ({
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -20, opacity: 0 }}
               transition={{ duration: 0.5 }}
-              className="flex items-center space-x-3 px-4 py-3 bg-white/70 backdrop-blur-sm rounded-lg border border-gray-200"
+              className="flex items-center space-x-3 px-4 py-2 bg-white/70 backdrop-blur-sm rounded-lg border border-gray-200"
             >
-              <div className={cn("p-2 rounded-lg", tips[currentTip].color)}>
+              <div className={cn("p-1.5 rounded-lg", tips[currentTip].color)}>
                 {tips[currentTip].icon}
               </div>
               <div className="text-left">
-                <h3 className="font-semibold text-gray-900 text-sm">
+                <h3 className="font-medium text-gray-900 text-xs">
                   {tips[currentTip].title}
                 </h3>
-                <p className="text-xs text-gray-600 mt-1">
+                <p className="text-xs text-gray-600 mt-0.5">
                   {tips[currentTip].description}
                 </p>
               </div>
@@ -453,53 +612,447 @@ const WelcomeStep: React.FC<{ onNext: () => void; currentTip: number }> = ({
           </AnimatePresence>
         </motion.div>
 
-        {/* Social Proof */}
+        {/* Trust Indicators */}
         <motion.div
-          className="flex items-center justify-center space-x-1 text-sm text-gray-500"
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.5 }}
-        >
-          <div className="flex -space-x-1">
-            {[...Array(5)].map((_, i) => (
-              <div
-                key={i}
-                className="w-6 h-6 bg-gradient-to-br from-teal-400 to-navy-600 rounded-full border-2 border-white"
-              />
-            ))}
-          </div>
-          <span className="ml-2">Trusted by 50,000+ users</span>
-          <div className="flex space-x-1 ml-2">
-            {[...Array(5)].map((_, i) => (
-              <Star
-                key={i}
-                className="h-3 w-3 fill-yellow-400 text-yellow-400"
-              />
-            ))}
-          </div>
-        </motion.div>
-
-        {/* CTA */}
-        <motion.div
+          className="flex items-center justify-center space-x-4 text-xs text-gray-500"
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.6 }}
         >
-          <Button
-            onClick={onNext}
-            size="lg"
-            className="w-full bg-gradient-to-r from-teal-400 to-teal-500 hover:from-teal-500 hover:to-teal-600 text-white font-semibold py-4 text-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
-          >
-            Get Started
-            <ArrowRight className="ml-2 h-5 w-5" />
-          </Button>
+          <div className="flex items-center space-x-1">
+            <Shield className="h-3 w-3" />
+            <span>Bank-level security</span>
+          </div>
+          <div className="flex items-center space-x-1">
+            <Users className="h-3 w-3" />
+            <span>50,000+ users</span>
+          </div>
+          <div className="flex items-center space-x-1">
+            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+            <span>4.9/5 rating</span>
+          </div>
         </motion.div>
       </div>
     </div>
   );
 };
 
-// Step 2: Personalization
+// Step 2: Bill Discovery with Smart Suggestions
+const BillDiscoveryStep: React.FC<{
+  onNext: () => void;
+  state: OnboardingState;
+  updateState: (updates: Partial<OnboardingState>) => void;
+  setIsLoading: (loading: boolean) => void;
+  isLoading: boolean;
+}> = ({ onNext, state, updateState, setIsLoading, isLoading }) => {
+  const [discoveredBills, setDiscoveredBills] = useState<
+    OnboardingState["discoveredBills"]
+  >([]);
+  const [hasStartedDiscovery, setHasStartedDiscovery] = useState(false);
+
+  const mockDiscovery = () => {
+    setIsLoading(true);
+    setHasStartedDiscovery(true);
+
+    // Simulate progressive discovery
+    const bills = [
+      {
+        id: "1",
+        name: "PG&E Electric",
+        amount: 125.5,
+        confidence: 95,
+        source: "plaid" as const,
+      },
+      {
+        id: "2",
+        name: "Comcast Internet",
+        amount: 79.99,
+        confidence: 92,
+        source: "plaid" as const,
+      },
+      {
+        id: "3",
+        name: "Netflix",
+        amount: 15.99,
+        confidence: 88,
+        source: "gmail" as const,
+      },
+      {
+        id: "4",
+        name: "Spotify Premium",
+        amount: 9.99,
+        confidence: 85,
+        source: "gmail" as const,
+      },
+      {
+        id: "5",
+        name: "State Farm Insurance",
+        amount: 89.0,
+        confidence: 78,
+        source: "suggestion" as const,
+      },
+    ];
+
+    bills.forEach((bill, index) => {
+      setTimeout(
+        () => {
+          setDiscoveredBills((prev) => [...prev, bill]);
+        },
+        (index + 1) * 800,
+      );
+    });
+
+    setTimeout(
+      () => {
+        setIsLoading(false);
+        updateState({ discoveredBills: bills });
+      },
+      bills.length * 800 + 1000,
+    );
+  };
+
+  const startDiscovery = () => {
+    if (state.quickStartMethod === "bank") {
+      mockDiscovery();
+    } else if (state.quickStartMethod === "gmail") {
+      // Gmail OAuth simulation
+      setTimeout(() => {
+        mockDiscovery();
+      }, 1500);
+    } else {
+      onNext();
+    }
+  };
+
+  const confirmBill = (billId: string) => {
+    setDiscoveredBills((prev) =>
+      prev.map((bill) =>
+        bill.id === billId ? { ...bill, confidence: 100 } : bill,
+      ),
+    );
+  };
+
+  const removeBill = (billId: string) => {
+    setDiscoveredBills((prev) => prev.filter((bill) => bill.id !== billId));
+  };
+
+  if (!hasStartedDiscovery) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+        <div className="max-w-sm mx-auto space-y-6">
+          <motion.div
+            className="w-16 h-16 bg-gradient-to-br from-blue-100 to-teal-100 rounded-2xl flex items-center justify-center mx-auto"
+            animate={{ rotate: [0, 5, -5, 0] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          >
+            <Brain className="h-8 w-8 text-teal-600" />
+          </motion.div>
+
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold text-navy-900 font-display">
+              Discover Your Bills
+            </h2>
+            <p className="text-gray-600">
+              {state.quickStartMethod === "bank" &&
+                "We'll analyze your transactions to find recurring bills"}
+              {state.quickStartMethod === "gmail" &&
+                "We'll scan your email for e-bills and subscriptions"}
+              {state.quickStartMethod === "manual" &&
+                "Skip discovery and add bills manually"}
+            </p>
+          </div>
+
+          {state.quickStartMethod !== "manual" && (
+            <div className="bg-teal-50 border border-teal-200 rounded-lg p-4 text-left">
+              <div className="flex items-start space-x-2">
+                <Lightbulb className="h-4 w-4 text-teal-600 mt-0.5" />
+                <div className="text-sm">
+                  <p className="font-medium text-teal-800">
+                    What we'll access:
+                  </p>
+                  <ul className="text-teal-700 mt-1 space-y-1">
+                    {state.quickStartMethod === "bank" && (
+                      <>
+                        <li>• Transaction history (read-only)</li>
+                        <li>• Account balances</li>
+                        <li>• Recurring payment patterns</li>
+                      </>
+                    )}
+                    {state.quickStartMethod === "gmail" && (
+                      <>
+                        <li>• E-bills and receipts</li>
+                        <li>• Subscription confirmations</li>
+                        <li>• Payment notifications</li>
+                      </>
+                    )}
+                  </ul>
+                  <p className="text-xs text-teal-600 mt-2">
+                    We use Plaid—bank-level security, read-only access
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <Button
+            onClick={startDiscovery}
+            className="w-full bg-gradient-to-r from-teal-400 to-teal-500 hover:from-teal-500 hover:to-teal-600"
+          >
+            {state.quickStartMethod === "bank" && "Connect Bank Account"}
+            {state.quickStartMethod === "gmail" && "Connect Email"}
+            {state.quickStartMethod === "manual" && "Skip Discovery"}
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex-1 flex flex-col p-6">
+      <div className="max-w-md mx-auto w-full space-y-6 flex-1 flex flex-col justify-center">
+        <div className="text-center space-y-2">
+          <h2 className="text-2xl font-bold text-navy-900 font-display">
+            Smart Bill Discovery
+          </h2>
+          <p className="text-gray-600">
+            {isLoading
+              ? "Analyzing your data to find bills..."
+              : `Found ${discoveredBills.length} potential bills`}
+          </p>
+        </div>
+
+        {isLoading ? (
+          <div className="space-y-4">
+            <div className="flex justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500"></div>
+            </div>
+            <div className="space-y-3">
+              {[1, 2, 3].map((_, index) => (
+                <div
+                  key={index}
+                  className="animate-pulse bg-gray-200 h-16 rounded-lg"
+                ></div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4 max-h-96 overflow-y-auto">
+            {discoveredBills.map((bill, index) => (
+              <motion.div
+                key={bill.id}
+                initial={{ x: 20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: index * 0.1 }}
+                className="bg-white border border-gray-200 rounded-lg p-4"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2">
+                      <h3 className="font-semibold text-gray-900">
+                        {bill.name}
+                      </h3>
+                      <Badge
+                        variant={
+                          bill.source === "plaid"
+                            ? "default"
+                            : bill.source === "gmail"
+                              ? "secondary"
+                              : "outline"
+                        }
+                        className="text-xs"
+                      >
+                        {bill.source === "plaid"
+                          ? "Bank"
+                          : bill.source === "gmail"
+                            ? "Email"
+                            : "Suggested"}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center space-x-4 mt-1">
+                      <span className="text-lg font-bold text-gray-900">
+                        ${bill.amount.toFixed(2)}
+                      </span>
+                      <span className="text-sm text-gray-500">
+                        {bill.confidence}% confidence
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex space-x-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => removeBill(bill.id)}
+                    >
+                      Remove
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => confirmBill(bill.id)}
+                      className="bg-teal-500 hover:bg-teal-600"
+                    >
+                      Confirm
+                    </Button>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
+
+        {!isLoading && (
+          <Button
+            onClick={onNext}
+            className="w-full bg-gradient-to-r from-teal-400 to-teal-500 hover:from-teal-500 hover:to-teal-600"
+          >
+            Continue with {discoveredBills.length} Bills
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Step 3: Household Setup
+const HouseholdSetupStep: React.FC<{
+  onNext: () => void;
+  state: OnboardingState;
+  updateState: (updates: Partial<OnboardingState>) => void;
+}> = ({ onNext, state, updateState }) => {
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
+  const householdTypes = [
+    {
+      value: "home",
+      label: "Primary Home",
+      icon: <Home className="h-5 w-5" />,
+      description: "Your main residence",
+    },
+    {
+      value: "rental",
+      label: "Rental Property",
+      icon: <Building className="h-5 w-5" />,
+      description: "Apartment or rental home",
+    },
+    {
+      value: "shared",
+      label: "Shared Living",
+      icon: <Users className="h-5 w-5" />,
+      description: "Roommates or shared expenses",
+    },
+    {
+      value: "parents",
+      label: "Parents' House",
+      icon: <UserCheck className="h-5 w-5" />,
+      description: "Living with family",
+    },
+  ];
+
+  const validateAndNext = () => {
+    const newErrors: { [key: string]: string } = {};
+
+    if (!state.householdType) {
+      newErrors.household = "Please select your household type";
+    }
+
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length === 0) {
+      onNext();
+    }
+  };
+
+  return (
+    <div className="flex-1 flex flex-col p-6">
+      <div className="max-w-md mx-auto w-full space-y-6 flex-1 flex flex-col justify-center">
+        <div className="text-center space-y-2">
+          <h2 className="text-2xl font-bold text-navy-900 font-display">
+            Household Context
+          </h2>
+          <p className="text-gray-600">
+            Help us organize your bills by household type
+          </p>
+        </div>
+
+        <div className="space-y-3">
+          {householdTypes.map((type) => (
+            <motion.label
+              key={type.value}
+              className={cn(
+                "flex items-center space-x-3 p-4 rounded-lg border-2 cursor-pointer transition-all duration-200",
+                state.householdType === type.value
+                  ? "border-teal-500 bg-teal-50"
+                  : "border-gray-200 hover:border-gray-300 bg-white",
+              )}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <input
+                type="radio"
+                value={type.value}
+                checked={state.householdType === type.value}
+                onChange={(e) => {
+                  updateState({ householdType: e.target.value as any });
+                  if (errors.household)
+                    setErrors((prev) => ({ ...prev, household: "" }));
+                }}
+                className="sr-only"
+              />
+              <div
+                className={cn(
+                  "p-2 rounded-lg",
+                  state.householdType === type.value
+                    ? "bg-teal-100 text-teal-600"
+                    : "bg-gray-100 text-gray-600",
+                )}
+              >
+                {type.icon}
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-gray-900">{type.label}</h3>
+                <p className="text-sm text-gray-500">{type.description}</p>
+              </div>
+            </motion.label>
+          ))}
+        </div>
+
+        {/* Address Auto-populate */}
+        {state.address.zip && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-green-50 border border-green-200 rounded-lg p-4"
+          >
+            <div className="flex items-center space-x-2 mb-2">
+              <MapPin className="h-4 w-4 text-green-600" />
+              <span className="text-sm font-medium text-green-800">
+                Location detected
+              </span>
+            </div>
+            <p className="text-sm text-green-700">
+              {state.address.city}, {state.address.state} {state.address.zip}
+            </p>
+          </motion.div>
+        )}
+
+        {errors.household && (
+          <p className="text-sm text-red-600">{errors.household}</p>
+        )}
+
+        <Button
+          onClick={validateAndNext}
+          className="w-full bg-gradient-to-r from-teal-400 to-teal-500 hover:from-teal-500 hover:to-teal-600"
+        >
+          Continue
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+// Step 4: Personalization (Enhanced)
 const PersonalizationStep: React.FC<{
   onNext: () => void;
   state: OnboardingState;
@@ -512,10 +1065,6 @@ const PersonalizationStep: React.FC<{
 
     if (!state.firstName.trim()) {
       newErrors.firstName = "Please enter your first name";
-    }
-
-    if (!state.monthlyIncome) {
-      newErrors.monthlyIncome = "This helps us provide better insights";
     }
 
     setErrors(newErrors);
@@ -534,7 +1083,7 @@ const PersonalizationStep: React.FC<{
           animate={{ y: 0, opacity: 1 }}
         >
           <h2 className="text-2xl font-bold text-navy-900 font-display">
-            Let's personalize your experience
+            Personalize Your Experience
           </h2>
           <p className="text-gray-600">
             Help us tailor BillBuddy to your needs
@@ -592,22 +1141,10 @@ const PersonalizationStep: React.FC<{
                 type="number"
                 placeholder="5,000"
                 value={state.monthlyIncome}
-                onChange={(e) => {
-                  updateState({ monthlyIncome: e.target.value });
-                  if (errors.monthlyIncome)
-                    setErrors((prev) => ({ ...prev, monthlyIncome: "" }));
-                }}
-                className={cn(
-                  "w-full pl-10 transition-all duration-200",
-                  errors.monthlyIncome
-                    ? "border-red-300 focus:border-red-500"
-                    : "focus:border-teal-500",
-                )}
+                onChange={(e) => updateState({ monthlyIncome: e.target.value })}
+                className="w-full pl-10 transition-all duration-200 focus:border-teal-500"
               />
             </div>
-            {errors.monthlyIncome && (
-              <p className="text-sm text-red-600">{errors.monthlyIncome}</p>
-            )}
             <p className="text-xs text-gray-500">
               💡 This helps us provide personalized budgeting insights
             </p>
@@ -693,7 +1230,7 @@ const PersonalizationStep: React.FC<{
   );
 };
 
-// Step 3: Legal Agreements - NEW STEP!
+// Step 5: Legal Agreements (kept same as before but condensed for space)
 const LegalAgreementsStep: React.FC<{
   onNext: () => void;
   state: OnboardingState;
@@ -707,52 +1244,17 @@ const LegalAgreementsStep: React.FC<{
   const requiredAgreements = legalAgreements.filter(
     (agreement) => agreement.required,
   );
-  const optionalAgreements = legalAgreements.filter(
-    (agreement) => !agreement.required,
-  );
-
   const allRequiredAgreed = requiredAgreements.every(
     (agreement) => state.legalAgreements[agreement.id],
   );
 
   const validateAndNext = () => {
-    const missingRequired = requiredAgreements
-      .filter((agreement) => !state.legalAgreements[agreement.id])
-      .map((agreement) => agreement.title);
-
-    if (missingRequired.length > 0) {
+    if (!allRequiredAgreed) {
       setErrors(["You must agree to all required terms to continue."]);
       return;
     }
-
     setErrors([]);
     onNext();
-  };
-
-  const getCategoryIcon = (category: LegalAgreement["category"]) => {
-    switch (category) {
-      case "core":
-        return <FileText className="h-4 w-4" />;
-      case "banking":
-        return <Lock className="h-4 w-4" />;
-      case "privacy":
-        return <Shield className="h-4 w-4" />;
-      case "communication":
-        return <Users className="h-4 w-4" />;
-    }
-  };
-
-  const getCategoryColor = (category: LegalAgreement["category"]) => {
-    switch (category) {
-      case "core":
-        return "bg-blue-100 text-blue-600";
-      case "banking":
-        return "bg-green-100 text-green-600";
-      case "privacy":
-        return "bg-purple-100 text-purple-600";
-      case "communication":
-        return "bg-orange-100 text-orange-600";
-    }
   };
 
   return (
@@ -770,25 +1272,8 @@ const LegalAgreementsStep: React.FC<{
             </h2>
           </div>
           <p className="text-gray-600">
-            Please review and accept our terms to continue. These agreements
-            protect both you and BillBuddy.
+            Please review and accept our terms to continue
           </p>
-          <div className="flex items-center justify-center space-x-4 text-sm">
-            <div className="flex items-center space-x-1">
-              <Calendar className="h-4 w-4 text-gray-400" />
-              <span className="text-gray-500">
-                {new Date().toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <Lock className="h-4 w-4 text-gray-400" />
-              <span className="text-gray-500">Securely recorded</span>
-            </div>
-          </div>
         </motion.div>
 
         <motion.div
@@ -798,173 +1283,52 @@ const LegalAgreementsStep: React.FC<{
           transition={{ delay: 0.1 }}
         >
           <ScrollArea className="h-96 pr-4">
-            <div className="space-y-6">
-              {/* Required Agreements */}
-              <div className="space-y-4">
-                <div className="flex items-center space-x-2">
-                  <AlertTriangle className="h-5 w-5 text-red-500" />
-                  <h3 className="font-semibold text-gray-900">
-                    Required Agreements
-                  </h3>
-                  <Badge variant="destructive" className="text-xs">
-                    Required
-                  </Badge>
-                </div>
-
-                <div className="space-y-3">
-                  {requiredAgreements.map((agreement) => (
-                    <motion.div
-                      key={agreement.id}
-                      className={cn(
-                        "border rounded-lg p-4 transition-all duration-200",
-                        state.legalAgreements[agreement.id]
-                          ? "border-teal-300 bg-teal-50"
-                          : "border-gray-200 hover:border-gray-300",
-                      )}
-                      whileHover={{ scale: 1.01 }}
-                    >
-                      <div className="flex items-start space-x-3">
-                        <Checkbox
-                          id={agreement.id}
-                          checked={state.legalAgreements[agreement.id]}
-                          onCheckedChange={(checked) =>
-                            onAgreementChange(agreement.id, checked as boolean)
-                          }
-                          className="mt-1"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center space-x-2 mb-2">
-                            <div
-                              className={cn(
-                                "p-1 rounded",
-                                getCategoryColor(agreement.category),
-                              )}
-                            >
-                              {getCategoryIcon(agreement.category)}
-                            </div>
-                            <h4 className="font-semibold text-gray-900">
-                              {agreement.title}
-                            </h4>
-                            <Badge variant="outline" className="text-xs">
-                              v{agreement.version}
-                            </Badge>
-                          </div>
-                          <p className="text-sm text-gray-600 mb-3">
-                            {agreement.description}
-                          </p>
-                          <div className="flex items-center justify-between">
-                            <button
-                              type="button"
-                              className="text-sm text-teal-600 hover:text-teal-700 flex items-center space-x-1"
-                              onClick={() =>
-                                window.open(agreement.documentUrl, "_blank")
-                              }
-                            >
-                              <span>Read full document</span>
-                              <ExternalLink className="h-3 w-3" />
-                            </button>
-                            {state.agreementTimestamps[agreement.id] && (
-                              <span className="text-xs text-gray-500">
-                                Agreed:{" "}
-                                {new Date(
-                                  state.agreementTimestamps[agreement.id],
-                                ).toLocaleTimeString()}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
-
-              <Separator />
-
-              {/* Optional Agreements */}
-              <div className="space-y-4">
-                <div className="flex items-center space-x-2">
-                  <Users className="h-5 w-5 text-blue-500" />
-                  <h3 className="font-semibold text-gray-900">
-                    Optional Consents
-                  </h3>
-                  <Badge variant="secondary" className="text-xs">
-                    Optional
-                  </Badge>
-                </div>
-
-                <div className="space-y-3">
-                  {optionalAgreements.map((agreement) => (
-                    <motion.div
-                      key={agreement.id}
-                      className={cn(
-                        "border rounded-lg p-4 transition-all duration-200",
-                        state.legalAgreements[agreement.id]
-                          ? "border-blue-300 bg-blue-50"
-                          : "border-gray-200 hover:border-gray-300",
-                      )}
-                      whileHover={{ scale: 1.01 }}
-                    >
-                      <div className="flex items-start space-x-3">
-                        <Checkbox
-                          id={agreement.id}
-                          checked={state.legalAgreements[agreement.id]}
-                          onCheckedChange={(checked) =>
-                            onAgreementChange(agreement.id, checked as boolean)
-                          }
-                          className="mt-1"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center space-x-2 mb-2">
-                            <div
-                              className={cn(
-                                "p-1 rounded",
-                                getCategoryColor(agreement.category),
-                              )}
-                            >
-                              {getCategoryIcon(agreement.category)}
-                            </div>
-                            <h4 className="font-semibold text-gray-900">
-                              {agreement.title}
-                            </h4>
-                            <Badge variant="outline" className="text-xs">
-                              v{agreement.version}
-                            </Badge>
-                          </div>
-                          <p className="text-sm text-gray-600 mb-3">
-                            {agreement.description}
-                          </p>
-                          <div className="flex items-center justify-between">
-                            <button
-                              type="button"
-                              className="text-sm text-teal-600 hover:text-teal-700 flex items-center space-x-1"
-                              onClick={() =>
-                                window.open(agreement.documentUrl, "_blank")
-                              }
-                            >
-                              <span>Read full document</span>
-                              <ExternalLink className="h-3 w-3" />
-                            </button>
-                            {state.agreementTimestamps[agreement.id] && (
-                              <span className="text-xs text-gray-500">
-                                Agreed:{" "}
-                                {new Date(
-                                  state.agreementTimestamps[agreement.id],
-                                ).toLocaleTimeString()}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
+            <div className="space-y-4">
+              {requiredAgreements.map((agreement) => (
+                <motion.div
+                  key={agreement.id}
+                  className={cn(
+                    "border rounded-lg p-4 transition-all duration-200",
+                    state.legalAgreements[agreement.id]
+                      ? "border-teal-300 bg-teal-50"
+                      : "border-gray-200 hover:border-gray-300",
+                  )}
+                  whileHover={{ scale: 1.01 }}
+                >
+                  <div className="flex items-start space-x-3">
+                    <Checkbox
+                      id={agreement.id}
+                      checked={state.legalAgreements[agreement.id]}
+                      onCheckedChange={(checked) =>
+                        onAgreementChange(agreement.id, checked as boolean)
+                      }
+                      className="mt-1"
+                    />
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-gray-900">
+                        {agreement.title}
+                      </h4>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {agreement.description}
+                      </p>
+                      <button
+                        type="button"
+                        className="text-sm text-teal-600 hover:text-teal-700 flex items-center space-x-1 mt-2"
+                        onClick={() =>
+                          window.open(agreement.documentUrl, "_blank")
+                        }
+                      >
+                        <span>Read full document</span>
+                        <ExternalLink className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
             </div>
           </ScrollArea>
         </motion.div>
 
-        {/* Errors */}
         {errors.length > 0 && (
           <motion.div
             className="bg-red-50 border border-red-200 rounded-lg p-4"
@@ -973,45 +1337,27 @@ const LegalAgreementsStep: React.FC<{
           >
             <div className="flex items-center space-x-2">
               <AlertTriangle className="h-5 w-5 text-red-500" />
-              <div>
-                {errors.map((error, index) => (
-                  <p key={index} className="text-sm text-red-700">
-                    {error}
-                  </p>
-                ))}
-              </div>
+              <p className="text-sm text-red-700">{errors[0]}</p>
             </div>
           </motion.div>
         )}
 
-        {/* Continue Button */}
-        <motion.div
-          className="sticky bottom-0 bg-white pt-4 border-t border-gray-200"
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.2 }}
+        <Button
+          onClick={validateAndNext}
+          disabled={!allRequiredAgreed}
+          className="w-full bg-gradient-to-r from-teal-400 to-teal-500 hover:from-teal-500 hover:to-teal-600 disabled:opacity-50"
         >
-          <Button
-            onClick={validateAndNext}
-            disabled={!allRequiredAgreed}
-            className="w-full bg-gradient-to-r from-teal-400 to-teal-500 hover:from-teal-500 hover:to-teal-600 transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-          >
-            {allRequiredAgreed
-              ? "Continue to Account Setup"
-              : "Accept Required Terms to Continue"}
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
-          <p className="text-xs text-gray-500 text-center mt-2">
-            By continuing, you acknowledge that you have read, understood, and
-            agree to the selected terms.
-          </p>
-        </motion.div>
+          {allRequiredAgreed
+            ? "Continue to Account Setup"
+            : "Accept Required Terms to Continue"}
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </Button>
       </div>
     </div>
   );
 };
 
-// Step 4: Enhanced Account Creation
+// Step 6: Account Creation (condensed)
 const AccountStep: React.FC<{
   onNext: () => void;
   email: string;
@@ -1021,38 +1367,15 @@ const AccountStep: React.FC<{
 }> = ({ onNext, email, setEmail, showPassword, setShowPassword }) => {
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const [passwordStrength, setPasswordStrength] = useState(0);
-
-  const validateEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  const calculatePasswordStrength = (password: string) => {
-    let strength = 0;
-    if (password.length >= 8) strength += 25;
-    if (/[A-Z]/.test(password)) strength += 25;
-    if (/[0-9]/.test(password)) strength += 25;
-    if (/[^A-Za-z0-9]/.test(password)) strength += 25;
-    return strength;
-  };
-
-  useEffect(() => {
-    setPasswordStrength(calculatePasswordStrength(password));
-  }, [password]);
 
   const validateAndNext = () => {
     const newErrors: { [key: string]: string } = {};
 
-    if (!email) {
-      newErrors.email = "Email is required";
-    } else if (!validateEmail(email)) {
+    if (!email || !email.includes("@")) {
       newErrors.email = "Please enter a valid email address";
     }
 
-    if (!password) {
-      newErrors.password = "Password is required";
-    } else if (password.length < 8) {
+    if (!password || password.length < 8) {
       newErrors.password = "Password must be at least 8 characters";
     }
 
@@ -1063,43 +1386,19 @@ const AccountStep: React.FC<{
     }
   };
 
-  const getStrengthColor = (strength: number) => {
-    if (strength <= 25) return "bg-red-500";
-    if (strength <= 50) return "bg-yellow-500";
-    if (strength <= 75) return "bg-blue-500";
-    return "bg-green-500";
-  };
-
-  const getStrengthText = (strength: number) => {
-    if (strength <= 25) return "Weak";
-    if (strength <= 50) return "Fair";
-    if (strength <= 75) return "Good";
-    return "Strong";
-  };
-
   return (
     <div className="flex-1 flex flex-col p-6">
       <div className="max-w-sm mx-auto w-full space-y-6 flex-1 flex flex-col justify-center">
-        <motion.div
-          className="text-center space-y-2"
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-        >
+        <div className="text-center space-y-2">
           <h2 className="text-2xl font-bold text-navy-900 font-display">
             Create Your Account
           </h2>
           <p className="text-gray-600">
             Secure your financial future with BillBuddy
           </p>
-        </motion.div>
+        </div>
 
-        <motion.div
-          className="space-y-4"
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.1 }}
-        >
-          {/* Email Input */}
+        <div className="space-y-4">
           <div className="space-y-2">
             <label
               htmlFor="email"
@@ -1112,23 +1411,14 @@ const AccountStep: React.FC<{
               type="email"
               placeholder="Enter your email"
               value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                if (errors.email) setErrors((prev) => ({ ...prev, email: "" }));
-              }}
-              className={cn(
-                "w-full transition-all duration-200",
-                errors.email
-                  ? "border-red-300 focus:border-red-500"
-                  : "focus:border-teal-500",
-              )}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full focus:border-teal-500"
             />
             {errors.email && (
               <p className="text-sm text-red-600">{errors.email}</p>
             )}
           </div>
 
-          {/* Password Input */}
           <div className="space-y-2">
             <label
               htmlFor="password"
@@ -1142,17 +1432,8 @@ const AccountStep: React.FC<{
                 type={showPassword ? "text" : "password"}
                 placeholder="Create a strong password"
                 value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  if (errors.password)
-                    setErrors((prev) => ({ ...prev, password: "" }));
-                }}
-                className={cn(
-                  "w-full pr-10 transition-all duration-200",
-                  errors.password
-                    ? "border-red-300 focus:border-red-500"
-                    : "focus:border-teal-500",
-                )}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full pr-10 focus:border-teal-500"
               />
               <button
                 type="button"
@@ -1166,564 +1447,120 @@ const AccountStep: React.FC<{
                 )}
               </button>
             </div>
-
-            {/* Password Strength Indicator */}
-            {password && (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">
-                    Password strength
-                  </span>
-                  <span
-                    className={cn(
-                      "text-xs font-medium",
-                      passwordStrength <= 25
-                        ? "text-red-600"
-                        : passwordStrength <= 50
-                          ? "text-yellow-600"
-                          : passwordStrength <= 75
-                            ? "text-blue-600"
-                            : "text-green-600",
-                    )}
-                  >
-                    {getStrengthText(passwordStrength)}
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-1.5">
-                  <motion.div
-                    className={cn(
-                      "h-1.5 rounded-full transition-all duration-300",
-                      getStrengthColor(passwordStrength),
-                    )}
-                    initial={{ width: 0 }}
-                    animate={{ width: `${passwordStrength}%` }}
-                  />
-                </div>
-              </div>
-            )}
-
             {errors.password && (
               <p className="text-sm text-red-600">{errors.password}</p>
             )}
           </div>
+        </div>
 
-          {/* OAuth Buttons */}
-          <div className="space-y-3">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200" />
-              </div>
-              <div className="relative flex justify-center text-xs">
-                <span className="bg-white px-2 text-gray-500">
-                  Or continue with
-                </span>
-              </div>
-            </div>
-
-            <motion.button
-              className="w-full flex items-center justify-center space-x-3 bg-white border-2 border-gray-200 rounded-lg py-3 px-4 hover:border-gray-300 transition-all duration-200"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <div className="w-5 h-5 bg-red-500 rounded-sm flex items-center justify-center text-white text-xs font-bold">
-                G
-              </div>
-              <span className="font-medium text-gray-700">
-                Continue with Google
-              </span>
-            </motion.button>
-
-            <motion.button
-              className="w-full flex items-center justify-center space-x-3 bg-black text-white rounded-lg py-3 px-4 hover:bg-gray-800 transition-all duration-200"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <div className="w-5 h-5 bg-white rounded-sm flex items-center justify-center text-black text-xs font-bold"></div>
-              <span className="font-medium">Continue with Apple</span>
-            </motion.button>
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.2 }}
+        <Button
+          onClick={validateAndNext}
+          className="w-full bg-gradient-to-r from-teal-400 to-teal-500 hover:from-teal-500 hover:to-teal-600"
         >
-          <Button
-            onClick={validateAndNext}
-            className="w-full bg-gradient-to-r from-teal-400 to-teal-500 hover:from-teal-500 hover:to-teal-600 transition-all duration-200 transform hover:scale-105"
-          >
-            Create Account
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
-
-          <p className="text-xs text-gray-500 text-center mt-3">
-            By creating an account, you confirm you have agreed to our Terms of
-            Service and Privacy Policy.
-          </p>
-        </motion.div>
+          Create Account
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </Button>
       </div>
     </div>
   );
 };
 
-// Step 5: Enhanced Bill Scan
-const BillScanStep: React.FC<{
-  onNext: () => void;
-  ocrText: string;
-  setOcrText: (text: string) => void;
-}> = ({ onNext, ocrText, setOcrText }) => {
-  const [isScanning, setIsScanning] = useState(false);
-  const [scanProgress, setScanProgress] = useState(0);
-  const [detectedFields, setDetectedFields] = useState<any>(null);
-
-  const startScan = () => {
-    setIsScanning(true);
-    setScanProgress(0);
-
-    // Simulate scanning progress
-    const progressInterval = setInterval(() => {
-      setScanProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(progressInterval);
-          return 100;
-        }
-        return prev + 10;
-      });
-    }, 200);
-
-    // Simulate OCR scanning with smart field detection
-    setTimeout(() => {
-      const mockDetection = {
-        billerName: "Pacific Gas & Electric",
-        amount: "125.50",
-        dueDate: "2024-03-15",
-        accountNumber: "****1234",
-        billType: "Utilities",
-      };
-
-      setDetectedFields(mockDetection);
-      setOcrText(
-        `Bill detected: ${mockDetection.billerName} - $${mockDetection.amount} - Due: ${mockDetection.dueDate}`,
-      );
-      setIsScanning(false);
-    }, 3000);
-  };
-
+// Step 7: Completion with Discovery Summary
+const CompletionStep: React.FC<{
+  onComplete: () => void;
+  firstName: string;
+  discoveredBills: OnboardingState["discoveredBills"];
+}> = ({ onComplete, firstName, discoveredBills }) => {
   return (
-    <div className="flex-1 flex flex-col p-6">
-      <div className="max-w-sm mx-auto w-full space-y-6 flex-1 flex flex-col justify-center">
+    <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+      <div className="max-w-sm mx-auto space-y-6">
         <motion.div
-          className="text-center space-y-2"
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", duration: 0.5 }}
         >
+          <CheckCircle className="h-16 w-16 text-success mx-auto animate-pulse-glow" />
+        </motion.div>
+
+        <div className="space-y-2">
           <h2 className="text-2xl font-bold text-navy-900 font-display">
-            Scan Your First Bill
+            Welcome to BillBuddy, {firstName}! 🎉
           </h2>
           <p className="text-gray-600">
-            Our AI will extract all the important details automatically
+            You're all set! We've discovered {discoveredBills.length} bills and
+            your account is secure.
           </p>
-        </motion.div>
+        </div>
 
-        {/* Enhanced Camera Preview */}
-        <motion.div
-          className={cn(
-            "aspect-[4/3] bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg border-2 border-dashed",
-            "flex flex-col items-center justify-center relative overflow-hidden",
-            isScanning ? "border-teal-400 bg-teal-50" : "border-gray-300",
-          )}
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.1 }}
-        >
-          {isScanning ? (
-            <div className="text-center space-y-4">
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-              >
-                <Scan className="h-12 w-12 text-teal-500 mx-auto" />
-              </motion.div>
-              <div className="space-y-2">
-                <p className="text-sm text-teal-600 font-medium">
-                  AI Scanning in Progress...
-                </p>
-                <div className="w-32 bg-teal-200 rounded-full h-2 mx-auto">
-                  <motion.div
-                    className="bg-teal-500 h-2 rounded-full"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${scanProgress}%` }}
-                    transition={{ duration: 0.2 }}
-                  />
-                </div>
-                <p className="text-xs text-teal-500">
-                  {scanProgress}% complete
-                </p>
-              </div>
-            </div>
-          ) : detectedFields ? (
-            <div className="w-full h-full relative">
-              {/* Simulated bill preview */}
-              <div className="absolute inset-4 bg-white rounded-lg shadow-md p-4 border">
-                <div className="space-y-2">
-                  <div className="h-3 bg-navy-200 rounded w-1/2"></div>
-                  <div className="h-2 bg-gray-200 rounded w-1/3"></div>
-                  <div className="h-2 bg-gray-200 rounded w-1/4"></div>
-                  <div className="mt-4 space-y-1">
-                    <div className="h-2 bg-gray-200 rounded w-full"></div>
-                    <div className="h-2 bg-gray-200 rounded w-3/4"></div>
-                  </div>
-                  <div className="mt-4 flex justify-between items-center">
-                    <span className="text-xs font-bold text-navy-900">
-                      Amount Due:
-                    </span>
-                    <span className="text-sm font-bold text-green-600">
-                      ${detectedFields.amount}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Detection highlights */}
-              <motion.div
-                className="absolute top-6 right-6 bg-teal-500 text-white text-xs px-2 py-1 rounded-full"
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.5 }}
-              >
-                ✓ Detected
-              </motion.div>
-            </div>
-          ) : (
-            <div className="text-center space-y-3">
-              <Camera className="h-12 w-12 text-gray-400 mx-auto" />
-              <div>
-                <p className="text-sm text-gray-500">
-                  Position your bill in the frame
-                </p>
-                <p className="text-xs text-gray-400 mt-1">
-                  AI will automatically detect key information
-                </p>
-              </div>
-            </div>
-          )}
-        </motion.div>
-
-        {/* Smart Field Detection */}
-        {detectedFields && (
-          <motion.div
-            className="space-y-3"
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.3 }}
-          >
-            <h3 className="font-semibold text-gray-900 text-sm">
-              Detected Information:
+        {discoveredBills.length > 0 && (
+          <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
+            <h3 className="font-semibold text-teal-800 mb-2">
+              Bills Ready to Manage:
             </h3>
-            <div className="grid grid-cols-2 gap-2">
-              {Object.entries(detectedFields).map(([key, value], index) => (
-                <motion.div
-                  key={key}
-                  className="bg-white p-3 rounded-lg border border-gray-200"
-                  initial={{ scale: 0.9, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: 0.1 * index }}
-                >
-                  <p className="text-xs text-gray-500 capitalize">
-                    {key.replace(/([A-Z])/g, " $1").trim()}
-                  </p>
-                  <p className="font-medium text-gray-900 text-sm">{value}</p>
-                </motion.div>
+            <div className="space-y-1 text-sm text-teal-700">
+              {discoveredBills.slice(0, 3).map((bill) => (
+                <div key={bill.id} className="flex justify-between">
+                  <span>{bill.name}</span>
+                  <span>${bill.amount.toFixed(2)}</span>
+                </div>
               ))}
+              {discoveredBills.length > 3 && (
+                <p className="text-xs text-teal-600">
+                  +{discoveredBills.length - 3} more bills
+                </p>
+              )}
             </div>
-          </motion.div>
+          </div>
         )}
 
-        {/* Actions */}
-        <motion.div
-          className="space-y-3"
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.2 }}
-        >
-          {!detectedFields && (
-            <Button
-              onClick={startScan}
-              disabled={isScanning}
-              variant="outline"
-              className="w-full hover:bg-teal-50 hover:border-teal-300 transition-all duration-200"
+        <div className="grid grid-cols-3 gap-4 py-4">
+          {[
+            {
+              icon: <Zap className="h-4 w-4" />,
+              label: "Auto-pay",
+              color: "bg-yellow-100 text-yellow-600",
+            },
+            {
+              icon: <Shield className="h-4 w-4" />,
+              label: "Secure",
+              color: "bg-green-100 text-green-600",
+            },
+            {
+              icon: <Brain className="h-4 w-4" />,
+              label: "Smart",
+              color: "bg-purple-100 text-purple-600",
+            },
+          ].map((feature, index) => (
+            <motion.div
+              key={feature.label}
+              className="text-center"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.4 + index * 0.1 }}
             >
-              <Camera className="mr-2 h-4 w-4" />
-              {isScanning ? "Scanning..." : "Start AI Scan"}
-            </Button>
-          )}
-
-          <Button
-            onClick={onNext}
-            disabled={!detectedFields}
-            className="w-full bg-gradient-to-r from-teal-400 to-teal-500 hover:from-teal-500 hover:to-teal-600 transition-all duration-200 transform hover:scale-105"
-          >
-            Continue
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
-
-          {!detectedFields && (
-            <Button
-              onClick={onNext}
-              variant="ghost"
-              className="w-full text-gray-500 hover:text-gray-700"
-            >
-              Skip for now
-            </Button>
-          )}
-        </motion.div>
-      </div>
-    </div>
-  );
-};
-
-// Step 6: Enhanced Bank Link
-const BankLinkStep: React.FC<{ onComplete: () => void; firstName: string }> = ({
-  onComplete,
-  firstName,
-}) => {
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [isConnected, setIsConnected] = useState(false);
-  const [connectionProgress, setConnectionProgress] = useState(0);
-
-  const connectBank = () => {
-    setIsConnecting(true);
-    setConnectionProgress(0);
-
-    // Simulate connection progress
-    const progressInterval = setInterval(() => {
-      setConnectionProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(progressInterval);
-          return 100;
-        }
-        return prev + 5;
-      });
-    }, 150);
-
-    // Simulate Plaid connection
-    setTimeout(() => {
-      setIsConnecting(false);
-      setIsConnected(true);
-    }, 3000);
-  };
-
-  if (isConnected) {
-    return (
-      <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-        <div className="max-w-sm mx-auto space-y-6">
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", duration: 0.5 }}
-          >
-            <CheckCircle className="h-16 w-16 text-success mx-auto animate-pulse-glow" />
-          </motion.div>
-
-          <motion.div
-            className="space-y-2"
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2 }}
-          >
-            <h2 className="text-2xl font-bold text-navy-900 font-display">
-              Welcome to BillBuddy, {firstName}! 🎉
-            </h2>
-            <p className="text-gray-600">
-              Your account is set up and your bank is connected securely. You're
-              ready to take control of your bills!
-            </p>
-          </motion.div>
-
-          <motion.div
-            className="grid grid-cols-3 gap-4 py-4"
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.3 }}
-          >
-            {[
-              {
-                icon: <Zap className="h-4 w-4" />,
-                label: "Auto-pay",
-                color: "bg-yellow-100 text-yellow-600",
-              },
-              {
-                icon: <Shield className="h-4 w-4" />,
-                label: "Secure",
-                color: "bg-green-100 text-green-600",
-              },
-              {
-                icon: <Brain className="h-4 w-4" />,
-                label: "Smart",
-                color: "bg-purple-100 text-purple-600",
-              },
-            ].map((feature, index) => (
-              <motion.div
-                key={feature.label}
-                className="text-center"
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.4 + index * 0.1 }}
+              <div
+                className={cn(
+                  "w-12 h-12 rounded-full mx-auto flex items-center justify-center mb-2",
+                  feature.color,
+                )}
               >
-                <div
-                  className={cn(
-                    "w-12 h-12 rounded-full mx-auto flex items-center justify-center mb-2",
-                    feature.color,
-                  )}
-                >
-                  {feature.icon}
-                </div>
-                <p className="text-xs font-medium text-gray-600">
-                  {feature.label}
-                </p>
-              </motion.div>
-            ))}
-          </motion.div>
-
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.6 }}
-          >
-            <Button
-              onClick={onComplete}
-              size="lg"
-              className="w-full bg-gradient-to-r from-teal-400 to-teal-500 hover:from-teal-500 hover:to-teal-600 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
-            >
-              Enter Dashboard
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-          </motion.div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex-1 flex flex-col p-6">
-      <div className="max-w-sm mx-auto w-full space-y-6 flex-1 flex flex-col justify-center">
-        <motion.div
-          className="text-center space-y-2"
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-        >
-          <h2 className="text-2xl font-bold text-navy-900 font-display">
-            Connect Your Bank
-          </h2>
-          <p className="text-gray-600">
-            Securely link your account to enable smart features
-          </p>
-        </motion.div>
-
-        {/* Enhanced Plaid-like interface */}
-        <motion.div
-          className="bg-white rounded-lg border border-gray-200 p-6 space-y-4 shadow-sm"
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.1 }}
-        >
-          <div className="text-center">
-            <motion.div
-              className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-3"
-              animate={isConnecting ? { scale: [1, 1.1, 1] } : {}}
-              transition={{ duration: 1, repeat: isConnecting ? Infinity : 0 }}
-            >
-              <span className="text-xl">🏦</span>
-            </motion.div>
-            <h3 className="font-semibold text-gray-900">Bank-Level Security</h3>
-            <p className="text-sm text-gray-500 mt-1">
-              256-bit encryption • Never store credentials
-            </p>
-          </div>
-
-          {isConnecting && (
-            <motion.div
-              className="text-center py-4 space-y-3"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-            >
-              <div className="flex justify-center space-x-1">
-                {[...Array(3)].map((_, i) => (
-                  <motion.div
-                    key={i}
-                    className="w-2 h-2 bg-teal-500 rounded-full"
-                    animate={{
-                      scale: [1, 1.5, 1],
-                      opacity: [0.7, 1, 0.7],
-                    }}
-                    transition={{
-                      duration: 1,
-                      repeat: Infinity,
-                      delay: i * 0.2,
-                    }}
-                  />
-                ))}
+                {feature.icon}
               </div>
-              <p className="text-sm text-gray-600">
-                Establishing secure connection...
+              <p className="text-xs font-medium text-gray-600">
+                {feature.label}
               </p>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <motion.div
-                  className="bg-teal-500 h-2 rounded-full"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${connectionProgress}%` }}
-                  transition={{ duration: 0.2 }}
-                />
-              </div>
             </motion.div>
-          )}
+          ))}
+        </div>
 
-          {/* Trust indicators */}
-          {!isConnecting && (
-            <div className="grid grid-cols-2 gap-3 pt-2">
-              {[
-                {
-                  icon: <Shield className="h-3 w-3" />,
-                  label: "SSL Encrypted",
-                },
-                { icon: <Users className="h-3 w-3" />, label: "50K+ Users" },
-              ].map((indicator, index) => (
-                <div
-                  key={indicator.label}
-                  className="flex items-center space-x-2 text-xs text-gray-500"
-                >
-                  <div className="text-green-500">{indicator.icon}</div>
-                  <span>{indicator.label}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </motion.div>
-
-        <motion.div
-          className="space-y-3"
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.2 }}
+        <Button
+          onClick={onComplete}
+          size="lg"
+          className="w-full bg-gradient-to-r from-teal-400 to-teal-500 hover:from-teal-500 hover:to-teal-600 shadow-lg hover:shadow-xl"
         >
-          <Button
-            onClick={connectBank}
-            disabled={isConnecting}
-            className="w-full bg-gradient-to-r from-teal-400 to-teal-500 hover:from-teal-500 hover:to-teal-600 transition-all duration-200 transform hover:scale-105"
-          >
-            {isConnecting ? "Connecting..." : "Connect Bank Account"}
-            {!isConnecting && <ArrowRight className="ml-2 h-4 w-4" />}
-          </Button>
-
-          <Button
-            onClick={onComplete}
-            variant="ghost"
-            className="w-full text-gray-500 hover:text-gray-700"
-          >
-            Skip for now
-          </Button>
-        </motion.div>
+          Enter Dashboard
+          <ArrowRight className="ml-2 h-5 w-5" />
+        </Button>
       </div>
     </div>
   );
