@@ -16,11 +16,19 @@ import {
   DollarSign,
   Eye,
   EyeOff,
+  FileText,
+  Lock,
+  AlertTriangle,
+  ExternalLink,
+  Calendar,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -31,6 +39,17 @@ interface OnboardingState {
   monthlyIncome: string;
   billFrequency: "weekly" | "monthly" | "varies";
   ocrText: string;
+  legalAgreements: {
+    termsOfService: boolean;
+    privacyPolicy: boolean;
+    electronicConsent: boolean;
+    plaidTerms: boolean;
+    dataSharing: boolean;
+    communicationConsent: boolean;
+  };
+  agreementTimestamps: {
+    [key: string]: string;
+  };
   isComplete: boolean;
   hasSeenTips: boolean;
 }
@@ -41,6 +60,79 @@ interface Tip {
   description: string;
   color: string;
 }
+
+interface LegalAgreement {
+  id: keyof OnboardingState["legalAgreements"];
+  title: string;
+  description: string;
+  required: boolean;
+  documentUrl: string;
+  version: string;
+  category: "core" | "banking" | "privacy" | "communication";
+}
+
+const legalAgreements: LegalAgreement[] = [
+  {
+    id: "termsOfService",
+    title: "Terms of Service",
+    description:
+      "Our core terms governing your use of BillBuddy services, including account management, bill automation, and payment processing.",
+    required: true,
+    documentUrl: "/legal/terms-of-service",
+    version: "2.1",
+    category: "core",
+  },
+  {
+    id: "privacyPolicy",
+    title: "Privacy Policy",
+    description:
+      "How we collect, use, store, and protect your personal and financial information in compliance with applicable privacy laws.",
+    required: true,
+    documentUrl: "/legal/privacy-policy",
+    version: "1.8",
+    category: "privacy",
+  },
+  {
+    id: "electronicConsent",
+    title: "Electronic Consent Agreement (E-SIGN)",
+    description:
+      "Consent to receive all communications, agreements, and disclosures electronically instead of paper documents.",
+    required: true,
+    documentUrl: "/legal/electronic-consent",
+    version: "1.3",
+    category: "core",
+  },
+  {
+    id: "plaidTerms",
+    title: "Bank Connection Terms (Plaid)",
+    description:
+      "Agreement for secure bank account connections through our third-party provider Plaid, including data access permissions.",
+    required: true,
+    documentUrl: "/legal/plaid-terms",
+    version: "3.2",
+    category: "banking",
+  },
+  {
+    id: "dataSharing",
+    title: "Data Sharing Agreement",
+    description:
+      "Optional consent for sharing anonymized financial insights to improve our services and provide personalized recommendations.",
+    required: false,
+    documentUrl: "/legal/data-sharing",
+    version: "1.1",
+    category: "privacy",
+  },
+  {
+    id: "communicationConsent",
+    title: "Marketing Communications",
+    description:
+      "Optional consent to receive promotional emails, product updates, and financial tips from BillBuddy.",
+    required: false,
+    documentUrl: "/legal/marketing-consent",
+    version: "1.0",
+    category: "communication",
+  },
+];
 
 const tips: Tip[] = [
   {
@@ -75,6 +167,15 @@ const OnboardingWizard: React.FC = () => {
     monthlyIncome: "",
     billFrequency: "monthly",
     ocrText: "",
+    legalAgreements: {
+      termsOfService: false,
+      privacyPolicy: false,
+      electronicConsent: false,
+      plaidTerms: false,
+      dataSharing: false,
+      communicationConsent: false,
+    },
+    agreementTimestamps: {},
     isComplete: false,
     hasSeenTips: false,
   });
@@ -86,15 +187,53 @@ const OnboardingWizard: React.FC = () => {
   };
 
   const nextStep = () => {
-    if (state.step < 5) {
+    if (state.step < 6) {
       updateState({ step: state.step + 1 });
     }
   };
 
   const goToDashboard = () => {
+    // Record final completion timestamp
+    const completionData = {
+      userId: Math.random().toString(36).substr(2, 9),
+      completedAt: new Date().toISOString(),
+      agreements: state.legalAgreements,
+      agreementTimestamps: state.agreementTimestamps,
+      ipAddress: "127.0.0.1", // In real app, get actual IP
+      userAgent: navigator.userAgent,
+    };
+
+    // Store completion data (in real app, send to backend)
+    localStorage.setItem(
+      "billbuddy_legal_compliance",
+      JSON.stringify(completionData),
+    );
     localStorage.setItem("billbuddy_onboarding_complete", "true");
     localStorage.setItem("billbuddy_user_name", state.firstName);
+
     navigate("/dashboard");
+  };
+
+  const handleAgreementChange = (
+    agreementId: keyof OnboardingState["legalAgreements"],
+    checked: boolean,
+  ) => {
+    const newAgreements = {
+      ...state.legalAgreements,
+      [agreementId]: checked,
+    };
+
+    const newTimestamps = checked
+      ? {
+          ...state.agreementTimestamps,
+          [agreementId]: new Date().toISOString(),
+        }
+      : state.agreementTimestamps;
+
+    updateState({
+      legalAgreements: newAgreements,
+      agreementTimestamps: newTimestamps,
+    });
   };
 
   // Auto-cycle tips
@@ -119,6 +258,14 @@ const OnboardingWizard: React.FC = () => {
         );
       case 3:
         return (
+          <LegalAgreementsStep
+            onNext={nextStep}
+            state={state}
+            onAgreementChange={handleAgreementChange}
+          />
+        );
+      case 4:
+        return (
           <AccountStep
             onNext={nextStep}
             email={state.email}
@@ -127,7 +274,7 @@ const OnboardingWizard: React.FC = () => {
             setShowPassword={setShowPassword}
           />
         );
-      case 4:
+      case 5:
         return (
           <BillScanStep
             onNext={nextStep}
@@ -135,7 +282,7 @@ const OnboardingWizard: React.FC = () => {
             setOcrText={(ocrText) => updateState({ ocrText })}
           />
         );
-      case 5:
+      case 6:
         return (
           <BankLinkStep
             onComplete={goToDashboard}
@@ -186,10 +333,10 @@ const OnboardingWizard: React.FC = () => {
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5 }}
       >
-        <ProgressBar current={state.step} total={5} showSteps />
+        <ProgressBar current={state.step} total={6} showSteps />
         <div className="flex justify-center mt-2">
           <div className="flex space-x-2">
-            {Array.from({ length: 5 }, (_, i) => (
+            {Array.from({ length: 6 }, (_, i) => (
               <motion.div
                 key={i}
                 className={cn(
@@ -546,7 +693,325 @@ const PersonalizationStep: React.FC<{
   );
 };
 
-// Step 3: Enhanced Account Creation
+// Step 3: Legal Agreements - NEW STEP!
+const LegalAgreementsStep: React.FC<{
+  onNext: () => void;
+  state: OnboardingState;
+  onAgreementChange: (
+    agreementId: keyof OnboardingState["legalAgreements"],
+    checked: boolean,
+  ) => void;
+}> = ({ onNext, state, onAgreementChange }) => {
+  const [errors, setErrors] = useState<string[]>([]);
+
+  const requiredAgreements = legalAgreements.filter(
+    (agreement) => agreement.required,
+  );
+  const optionalAgreements = legalAgreements.filter(
+    (agreement) => !agreement.required,
+  );
+
+  const allRequiredAgreed = requiredAgreements.every(
+    (agreement) => state.legalAgreements[agreement.id],
+  );
+
+  const validateAndNext = () => {
+    const missingRequired = requiredAgreements
+      .filter((agreement) => !state.legalAgreements[agreement.id])
+      .map((agreement) => agreement.title);
+
+    if (missingRequired.length > 0) {
+      setErrors(["You must agree to all required terms to continue."]);
+      return;
+    }
+
+    setErrors([]);
+    onNext();
+  };
+
+  const getCategoryIcon = (category: LegalAgreement["category"]) => {
+    switch (category) {
+      case "core":
+        return <FileText className="h-4 w-4" />;
+      case "banking":
+        return <Lock className="h-4 w-4" />;
+      case "privacy":
+        return <Shield className="h-4 w-4" />;
+      case "communication":
+        return <Users className="h-4 w-4" />;
+    }
+  };
+
+  const getCategoryColor = (category: LegalAgreement["category"]) => {
+    switch (category) {
+      case "core":
+        return "bg-blue-100 text-blue-600";
+      case "banking":
+        return "bg-green-100 text-green-600";
+      case "privacy":
+        return "bg-purple-100 text-purple-600";
+      case "communication":
+        return "bg-orange-100 text-orange-600";
+    }
+  };
+
+  return (
+    <div className="flex-1 flex flex-col p-6">
+      <div className="max-w-2xl mx-auto w-full space-y-6 flex-1 flex flex-col">
+        <motion.div
+          className="text-center space-y-4"
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+        >
+          <div className="flex items-center justify-center space-x-2">
+            <Shield className="h-8 w-8 text-teal-600" />
+            <h2 className="text-2xl font-bold text-navy-900 font-display">
+              Legal Agreements
+            </h2>
+          </div>
+          <p className="text-gray-600">
+            Please review and accept our terms to continue. These agreements
+            protect both you and BillBuddy.
+          </p>
+          <div className="flex items-center justify-center space-x-4 text-sm">
+            <div className="flex items-center space-x-1">
+              <Calendar className="h-4 w-4 text-gray-400" />
+              <span className="text-gray-500">
+                {new Date().toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <Lock className="h-4 w-4 text-gray-400" />
+              <span className="text-gray-500">Securely recorded</span>
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div
+          className="flex-1"
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.1 }}
+        >
+          <ScrollArea className="h-96 pr-4">
+            <div className="space-y-6">
+              {/* Required Agreements */}
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <AlertTriangle className="h-5 w-5 text-red-500" />
+                  <h3 className="font-semibold text-gray-900">
+                    Required Agreements
+                  </h3>
+                  <Badge variant="destructive" className="text-xs">
+                    Required
+                  </Badge>
+                </div>
+
+                <div className="space-y-3">
+                  {requiredAgreements.map((agreement) => (
+                    <motion.div
+                      key={agreement.id}
+                      className={cn(
+                        "border rounded-lg p-4 transition-all duration-200",
+                        state.legalAgreements[agreement.id]
+                          ? "border-teal-300 bg-teal-50"
+                          : "border-gray-200 hover:border-gray-300",
+                      )}
+                      whileHover={{ scale: 1.01 }}
+                    >
+                      <div className="flex items-start space-x-3">
+                        <Checkbox
+                          id={agreement.id}
+                          checked={state.legalAgreements[agreement.id]}
+                          onCheckedChange={(checked) =>
+                            onAgreementChange(agreement.id, checked as boolean)
+                          }
+                          className="mt-1"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center space-x-2 mb-2">
+                            <div
+                              className={cn(
+                                "p-1 rounded",
+                                getCategoryColor(agreement.category),
+                              )}
+                            >
+                              {getCategoryIcon(agreement.category)}
+                            </div>
+                            <h4 className="font-semibold text-gray-900">
+                              {agreement.title}
+                            </h4>
+                            <Badge variant="outline" className="text-xs">
+                              v{agreement.version}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-gray-600 mb-3">
+                            {agreement.description}
+                          </p>
+                          <div className="flex items-center justify-between">
+                            <button
+                              type="button"
+                              className="text-sm text-teal-600 hover:text-teal-700 flex items-center space-x-1"
+                              onClick={() =>
+                                window.open(agreement.documentUrl, "_blank")
+                              }
+                            >
+                              <span>Read full document</span>
+                              <ExternalLink className="h-3 w-3" />
+                            </button>
+                            {state.agreementTimestamps[agreement.id] && (
+                              <span className="text-xs text-gray-500">
+                                Agreed:{" "}
+                                {new Date(
+                                  state.agreementTimestamps[agreement.id],
+                                ).toLocaleTimeString()}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Optional Agreements */}
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <Users className="h-5 w-5 text-blue-500" />
+                  <h3 className="font-semibold text-gray-900">
+                    Optional Consents
+                  </h3>
+                  <Badge variant="secondary" className="text-xs">
+                    Optional
+                  </Badge>
+                </div>
+
+                <div className="space-y-3">
+                  {optionalAgreements.map((agreement) => (
+                    <motion.div
+                      key={agreement.id}
+                      className={cn(
+                        "border rounded-lg p-4 transition-all duration-200",
+                        state.legalAgreements[agreement.id]
+                          ? "border-blue-300 bg-blue-50"
+                          : "border-gray-200 hover:border-gray-300",
+                      )}
+                      whileHover={{ scale: 1.01 }}
+                    >
+                      <div className="flex items-start space-x-3">
+                        <Checkbox
+                          id={agreement.id}
+                          checked={state.legalAgreements[agreement.id]}
+                          onCheckedChange={(checked) =>
+                            onAgreementChange(agreement.id, checked as boolean)
+                          }
+                          className="mt-1"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center space-x-2 mb-2">
+                            <div
+                              className={cn(
+                                "p-1 rounded",
+                                getCategoryColor(agreement.category),
+                              )}
+                            >
+                              {getCategoryIcon(agreement.category)}
+                            </div>
+                            <h4 className="font-semibold text-gray-900">
+                              {agreement.title}
+                            </h4>
+                            <Badge variant="outline" className="text-xs">
+                              v{agreement.version}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-gray-600 mb-3">
+                            {agreement.description}
+                          </p>
+                          <div className="flex items-center justify-between">
+                            <button
+                              type="button"
+                              className="text-sm text-teal-600 hover:text-teal-700 flex items-center space-x-1"
+                              onClick={() =>
+                                window.open(agreement.documentUrl, "_blank")
+                              }
+                            >
+                              <span>Read full document</span>
+                              <ExternalLink className="h-3 w-3" />
+                            </button>
+                            {state.agreementTimestamps[agreement.id] && (
+                              <span className="text-xs text-gray-500">
+                                Agreed:{" "}
+                                {new Date(
+                                  state.agreementTimestamps[agreement.id],
+                                ).toLocaleTimeString()}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </ScrollArea>
+        </motion.div>
+
+        {/* Errors */}
+        {errors.length > 0 && (
+          <motion.div
+            className="bg-red-50 border border-red-200 rounded-lg p-4"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <div className="flex items-center space-x-2">
+              <AlertTriangle className="h-5 w-5 text-red-500" />
+              <div>
+                {errors.map((error, index) => (
+                  <p key={index} className="text-sm text-red-700">
+                    {error}
+                  </p>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Continue Button */}
+        <motion.div
+          className="sticky bottom-0 bg-white pt-4 border-t border-gray-200"
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
+          <Button
+            onClick={validateAndNext}
+            disabled={!allRequiredAgreed}
+            className="w-full bg-gradient-to-r from-teal-400 to-teal-500 hover:from-teal-500 hover:to-teal-600 transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+          >
+            {allRequiredAgreed
+              ? "Continue to Account Setup"
+              : "Accept Required Terms to Continue"}
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+          <p className="text-xs text-gray-500 text-center mt-2">
+            By continuing, you acknowledge that you have read, understood, and
+            agree to the selected terms.
+          </p>
+        </motion.div>
+      </div>
+    </div>
+  );
+};
+
+// Step 4: Enhanced Account Creation
 const AccountStep: React.FC<{
   onNext: () => void;
   email: string;
@@ -793,14 +1258,8 @@ const AccountStep: React.FC<{
           </Button>
 
           <p className="text-xs text-gray-500 text-center mt-3">
-            By creating an account, you agree to our{" "}
-            <a href="#" className="text-teal-600 hover:underline">
-              Terms of Service
-            </a>{" "}
-            and{" "}
-            <a href="#" className="text-teal-600 hover:underline">
-              Privacy Policy
-            </a>
+            By creating an account, you confirm you have agreed to our Terms of
+            Service and Privacy Policy.
           </p>
         </motion.div>
       </div>
@@ -808,7 +1267,7 @@ const AccountStep: React.FC<{
   );
 };
 
-// Step 4: Enhanced Bill Scan
+// Step 5: Enhanced Bill Scan
 const BillScanStep: React.FC<{
   onNext: () => void;
   ocrText: string;
@@ -1024,7 +1483,7 @@ const BillScanStep: React.FC<{
   );
 };
 
-// Step 5: Enhanced Bank Link
+// Step 6: Enhanced Bank Link
 const BankLinkStep: React.FC<{ onComplete: () => void; firstName: string }> = ({
   onComplete,
   firstName,
