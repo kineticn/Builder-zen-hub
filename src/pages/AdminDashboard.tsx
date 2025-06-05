@@ -826,6 +826,24 @@ const AdminDashboard: React.FC = () => {
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
+
+            {/* TEST REPOSITORY PUSH BUTTON */}
+            <Button
+              onClick={() => {
+                alert(
+                  "🚀 REPOSITORY PUSH TEST SUCCESSFUL! 🚀\n\nIf you see this alert, the code change worked!\n\nNow check Builder.io for:\n- Push/Commit options\n- Git sync buttons\n- Repository management options",
+                );
+                console.log(
+                  "Repository push test - code change detected at:",
+                  new Date().toISOString(),
+                );
+              }}
+              className="bg-red-600 hover:bg-red-700 text-white border-red-300 animate-pulse font-bold"
+              size="sm"
+            >
+              🚀 TEST REPO PUSH 🚀
+            </Button>
+
             <Dialog open={isConfigOpen} onOpenChange={setIsConfigOpen}>
               <DialogTrigger asChild>
                 <Button
