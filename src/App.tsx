@@ -22,21 +22,23 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/onboarding" element={<OnboardingWizard />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/bill/:id" element={<BillDetail />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route
-              path="/admin/legal-compliance"
-              element={<LegalComplianceAdmin />}
-            />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/activity" element={<Dashboard />} />
-            <Route path="/offers" element={<Dashboard />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <div style={{ opacity: 1, minHeight: "100vh" }}>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/onboarding" element={<OnboardingWizard />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/bill/:id" element={<BillDetail />} />
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route
+                path="/admin/legal-compliance"
+                element={<LegalComplianceAdmin />}
+              />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/activity" element={<Dashboard />} />
+              <Route path="/offers" element={<Dashboard />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </div>
         </BrowserRouter>
       </TooltipProvider>
     </UserExperienceProvider>
