@@ -201,13 +201,17 @@ const tips: Tip[] = [
 // Step transition skeleton component
 const StepTransitionSkeleton: React.FC<{ step: number }> = ({ step }) => {
   const shouldReduceMotion = useReducedMotion();
-  
+
   return (
     <motion.div
       className="flex-1 flex flex-col p-6"
       initial={shouldReduceMotion ? {} : { opacity: 0 }}
       animate={shouldReduceMotion ? {} : { opacity: 1 }}
-      transition={{ duration: shouldReduceMotion ? 0 : tokens.animation.duration.normal }}
+      transition={{
+        duration: shouldReduceMotion
+          ? 0
+          : parseFloat(tokens.animation.duration.normal),
+      }}
     >
       <div className="max-w-2xl mx-auto w-full space-y-6 flex-1 flex flex-col">
         {/* Header skeleton */}
@@ -228,7 +232,7 @@ const StepTransitionSkeleton: React.FC<{ step: number }> = ({ step }) => {
               </div>
             </>
           )}
-          
+
           {step === 2 && (
             <>
               <div className="space-y-3">
@@ -238,7 +242,7 @@ const StepTransitionSkeleton: React.FC<{ step: number }> = ({ step }) => {
               </div>
             </>
           )}
-          
+
           {step === 3 && (
             <>
               <div className="grid grid-cols-2 gap-4">
@@ -253,7 +257,7 @@ const StepTransitionSkeleton: React.FC<{ step: number }> = ({ step }) => {
               </div>
             </>
           )}
-          
+
           {(step === 4 || step === 5) && (
             <>
               <Skeleton className="h-32 w-full" variant="shimmer" />
@@ -263,7 +267,7 @@ const StepTransitionSkeleton: React.FC<{ step: number }> = ({ step }) => {
               </div>
             </>
           )}
-          
+
           {step >= 6 && (
             <>
               <div className="space-y-3">
@@ -286,7 +290,7 @@ const StepTransitionSkeleton: React.FC<{ step: number }> = ({ step }) => {
 const OnboardingWizard: React.FC = () => {
   const navigate = useNavigate();
   const shouldReduceMotion = useReducedMotion();
-  
+
   const [state, setState] = useState<OnboardingState>({
     step: 1,
     quickStartMethod: "",
@@ -331,30 +335,44 @@ const OnboardingWizard: React.FC = () => {
   }, []);
 
   const nextStep = () => {
-    setState((prev) => ({ ...prev, isLoading: true, currentLoadingStep: `Loading step ${prev.step + 1}...` }));
-    
+    setState((prev) => ({
+      ...prev,
+      isLoading: true,
+      currentLoadingStep: `Loading step ${prev.step + 1}...`,
+    }));
+
     // Simulate loading time for realistic UX
-    setTimeout(() => {
-      setState((prev) => ({ 
-        ...prev, 
-        step: prev.step + 1, 
-        isLoading: false,
-        currentLoadingStep: ""
-      }));
-    }, shouldReduceMotion ? 100 : 800);
+    setTimeout(
+      () => {
+        setState((prev) => ({
+          ...prev,
+          step: prev.step + 1,
+          isLoading: false,
+          currentLoadingStep: "",
+        }));
+      },
+      shouldReduceMotion ? 100 : 800,
+    );
   };
 
   const prevStep = () => {
-    setState((prev) => ({ ...prev, isLoading: true, currentLoadingStep: "Going back..." }));
-    
-    setTimeout(() => {
-      setState((prev) => ({ 
-        ...prev, 
-        step: prev.step - 1, 
-        isLoading: false,
-        currentLoadingStep: ""
-      }));
-    }, shouldReduceMotion ? 50 : 400);
+    setState((prev) => ({
+      ...prev,
+      isLoading: true,
+      currentLoadingStep: "Going back...",
+    }));
+
+    setTimeout(
+      () => {
+        setState((prev) => ({
+          ...prev,
+          step: prev.step - 1,
+          isLoading: false,
+          currentLoadingStep: "",
+        }));
+      },
+      shouldReduceMotion ? 50 : 400,
+    );
   };
 
   const updateState = (updates: Partial<OnboardingState>) => {
@@ -391,31 +409,85 @@ const OnboardingWizard: React.FC = () => {
 
     switch (state.step) {
       case 1:
-        return <WelcomeStep onNext={nextStep} state={state} onMethodSelect={(method) => updateState({ quickStartMethod: method })} />;
+        return (
+          <WelcomeStep
+            onNext={nextStep}
+            state={state}
+            onMethodSelect={(method) =>
+              updateState({ quickStartMethod: method })
+            }
+          />
+        );
       case 2:
-        return <LegalAgreementsStep onNext={nextStep} onPrev={prevStep} state={state} onAgreementChange={handleAgreementChange} />;
+        return (
+          <LegalAgreementsStep
+            onNext={nextStep}
+            onPrev={prevStep}
+            state={state}
+            onAgreementChange={handleAgreementChange}
+          />
+        );
       case 3:
-        return <AccountCreationStep onNext={nextStep} onPrev={prevStep} state={state} updateState={updateState} />;
+        return (
+          <AccountCreationStep
+            onNext={nextStep}
+            onPrev={prevStep}
+            state={state}
+            updateState={updateState}
+          />
+        );
       case 4:
-        return <PlaidConnectionStep onNext={nextStep} onPrev={prevStep} state={state} updateState={updateState} />;
+        return (
+          <PlaidConnectionStep
+            onNext={nextStep}
+            onPrev={prevStep}
+            state={state}
+            updateState={updateState}
+          />
+        );
       case 5:
-        return <HouseholdSetupStep onNext={nextStep} onPrev={prevStep} state={state} updateState={updateState} />;
+        return (
+          <HouseholdSetupStep
+            onNext={nextStep}
+            onPrev={prevStep}
+            state={state}
+            updateState={updateState}
+          />
+        );
       case 6:
-        return <PersonalizationStep onNext={nextStep} onPrev={prevStep} state={state} updateState={updateState} />;
+        return (
+          <PersonalizationStep
+            onNext={nextStep}
+            onPrev={prevStep}
+            state={state}
+            updateState={updateState}
+          />
+        );
       case 7:
         return <CompletionStep onComplete={handleComplete} state={state} />;
       default:
-        return <WelcomeStep onNext={nextStep} state={state} onMethodSelect={(method) => updateState({ quickStartMethod: method })} />;
+        return (
+          <WelcomeStep
+            onNext={nextStep}
+            state={state}
+            onMethodSelect={(method) =>
+              updateState({ quickStartMethod: method })
+            }
+          />
+        );
     }
   };
 
-  const motionProps = shouldReduceMotion 
-    ? {} 
+  const motionDuration = shouldReduceMotion
+    ? 0
+    : parseFloat(tokens.animation.duration.normal);
+  const motionProps = shouldReduceMotion
+    ? {}
     : {
         initial: { opacity: 0 },
         animate: { opacity: 1 },
         exit: { opacity: 0 },
-        transition: { duration: tokens.animation.duration.normal }
+        transition: { duration: motionDuration },
       };
 
   return (
@@ -426,13 +498,15 @@ const OnboardingWizard: React.FC = () => {
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center space-x-3">
               <div className="flex items-center space-x-2">
-                <div 
+                <div
                   className="w-8 h-8 rounded-full bg-navy-900 flex items-center justify-center"
                   style={{ backgroundColor: tokens.colors.primary.navy[900] }}
                 >
                   <Sparkles className="h-4 w-4 text-white" />
                 </div>
-                <h1 className="text-lg font-bold text-navy-900 font-display">BillBuddy</h1>
+                <h1 className="text-lg font-bold text-navy-900 font-display">
+                  BillBuddy
+                </h1>
               </div>
               {state.isLoading && (
                 <div className="flex items-center space-x-2 text-sm text-gray-600">
@@ -441,12 +515,10 @@ const OnboardingWizard: React.FC = () => {
                 </div>
               )}
             </div>
-            <div className="text-sm text-gray-600">
-              Step {state.step} of 7
-            </div>
+            <div className="text-sm text-gray-600">Step {state.step} of 7</div>
           </div>
-          <ProgressBar 
-            value={(state.step / 7) * 100} 
+          <ProgressBar
+            value={(state.step / 7) * 100}
             className="h-2"
             showAnimation={!shouldReduceMotion}
           />
@@ -455,11 +527,7 @@ const OnboardingWizard: React.FC = () => {
 
       {/* Main content */}
       <AnimatePresence mode="wait">
-        <motion.div
-          key={state.step}
-          className="flex-1"
-          {...motionProps}
-        >
+        <motion.div key={state.step} className="flex-1" {...motionProps}>
           {getCurrentStepComponent()}
         </motion.div>
       </AnimatePresence>
@@ -490,27 +558,32 @@ const WelcomeStep: React.FC<{
     onNext();
   };
 
-  const motionProps = shouldReduceMotion ? {} : {
-    initial: { y: 20, opacity: 0 },
-    animate: { y: 0, opacity: 1 },
-    transition: { duration: tokens.animation.duration.normal }
-  };
+  const motionDuration = shouldReduceMotion
+    ? 0
+    : parseFloat(tokens.animation.duration.normal);
+  const motionProps = shouldReduceMotion
+    ? {}
+    : {
+        initial: { y: 20, opacity: 0 },
+        animate: { y: 0, opacity: 1 },
+        transition: { duration: motionDuration },
+      };
 
   return (
     <div className="flex-1 flex flex-col p-6">
       <div className="max-w-2xl mx-auto w-full space-y-8 flex-1 flex flex-col justify-center">
         <motion.div className="text-center space-y-6" {...motionProps}>
           <div className="flex items-center justify-center">
-            <div 
+            <div
               className="w-20 h-20 rounded-full bg-gradient-to-r from-teal-400 to-teal-500 flex items-center justify-center shadow-lg"
               style={{
-                background: `linear-gradient(135deg, ${tokens.colors.primary.teal[400]}, ${tokens.colors.primary.teal[500]})`
+                background: `linear-gradient(135deg, ${tokens.colors.primary.teal[400]}, ${tokens.colors.primary.teal[500]})`,
               }}
             >
               <Sparkles className="h-10 w-10 text-white" />
             </div>
           </div>
-          
+
           <div className="space-y-3">
             <h1 className="text-4xl font-bold text-navy-900 font-display">
               Welcome to BillBuddy
@@ -529,18 +602,27 @@ const WelcomeStep: React.FC<{
             transition={{ duration: shouldReduceMotion ? 0 : 0.3 }}
           >
             <div className="flex items-center space-x-3">
-              <div className={cn("w-10 h-10 rounded-full flex items-center justify-center", tips[rotatingTipIndex].color)}>
+              <div
+                className={cn(
+                  "w-10 h-10 rounded-full flex items-center justify-center",
+                  tips[rotatingTipIndex].color,
+                )}
+              >
                 {tips[rotatingTipIndex].icon}
               </div>
               <div className="text-left">
-                <h3 className="font-semibold text-gray-900">{tips[rotatingTipIndex].title}</h3>
-                <p className="text-sm text-gray-600">{tips[rotatingTipIndex].description}</p>
+                <h3 className="font-semibold text-gray-900">
+                  {tips[rotatingTipIndex].title}
+                </h3>
+                <p className="text-sm text-gray-600">
+                  {tips[rotatingTipIndex].description}
+                </p>
               </div>
             </div>
           </motion.div>
         </motion.div>
 
-        <motion.div 
+        <motion.div
           className="space-y-4"
           initial={shouldReduceMotion ? {} : { y: 20, opacity: 0 }}
           animate={shouldReduceMotion ? {} : { y: 0, opacity: 1 }}
@@ -563,11 +645,16 @@ const WelcomeStep: React.FC<{
               </div>
               <div className="flex-1 text-left">
                 <div className="flex items-center space-x-2">
-                  <h3 className="text-lg font-bold text-gray-900">Just Link My Bank</h3>
-                  <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">Fastest</Badge>
+                  <h3 className="text-lg font-bold text-gray-900">
+                    Just Link My Bank
+                  </h3>
+                  <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">
+                    Fastest
+                  </Badge>
                 </div>
                 <p className="text-gray-600 text-sm">
-                  Connect your bank account and we'll auto-detect 95%+ of your bills in seconds
+                  Connect your bank account and we'll auto-detect 95%+ of your
+                  bills in seconds
                 </p>
                 <div className="flex items-center space-x-4 mt-2 text-xs text-emerald-600">
                   <span>✓ 30-second setup</span>
@@ -591,8 +678,12 @@ const WelcomeStep: React.FC<{
                 <Mail className="h-5 w-5 text-blue-600" />
               </div>
               <div className="flex-1 text-left">
-                <h3 className="font-semibold text-gray-900">Connect Gmail/Email</h3>
-                <p className="text-gray-600 text-sm">Find bills from your email inbox (70%+ discovery rate)</p>
+                <h3 className="font-semibold text-gray-900">
+                  Connect Gmail/Email
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  Find bills from your email inbox (70%+ discovery rate)
+                </p>
               </div>
               <ArrowRight className="h-4 w-4 text-gray-400 group-hover:translate-x-1 transition-transform" />
             </div>
@@ -611,7 +702,9 @@ const WelcomeStep: React.FC<{
               </div>
               <div className="flex-1 text-left">
                 <h3 className="font-semibold text-gray-900">Set Up Manually</h3>
-                <p className="text-gray-600 text-sm">I'll add my bills myself step by step</p>
+                <p className="text-gray-600 text-sm">
+                  I'll add my bills myself step by step
+                </p>
               </div>
               <ArrowRight className="h-4 w-4 text-gray-400 group-hover:translate-x-1 transition-transform" />
             </div>
@@ -686,11 +779,16 @@ const LegalAgreementsStep: React.FC<{
     }
   };
 
-  const motionProps = shouldReduceMotion ? {} : {
-    initial: { y: 20, opacity: 0 },
-    animate: { y: 0, opacity: 1 },
-    transition: { duration: tokens.animation.duration.normal }
-  };
+  const motionDuration = shouldReduceMotion
+    ? 0
+    : parseFloat(tokens.animation.duration.normal);
+  const motionProps = shouldReduceMotion
+    ? {}
+    : {
+        initial: { y: 20, opacity: 0 },
+        animate: { y: 0, opacity: 1 },
+        transition: { duration: motionDuration },
+      };
 
   return (
     <div className="flex-1 flex flex-col p-6">
@@ -706,7 +804,7 @@ const LegalAgreementsStep: React.FC<{
             Before we begin, please review and accept our terms. This ensures
             your data is protected.
           </p>
-          <div 
+          <div
             className="border rounded-lg p-3"
             style={{
               backgroundColor: tokens.colors.primary.teal[50],
@@ -899,19 +997,23 @@ const LegalAgreementsStep: React.FC<{
 
         {/* Navigation buttons */}
         <div className="flex items-center justify-between">
-          <Button variant="outline" onClick={onPrev} className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            onClick={onPrev}
+            className="flex items-center space-x-2"
+          >
             <ArrowLeft className="h-4 w-4" />
             <span>Back</span>
           </Button>
-          
+
           <Button
             onClick={validateAndNext}
             disabled={!allRequiredAgreed}
             className={cn(
               "flex items-center space-x-2",
-              allRequiredAgreed 
-                ? "bg-teal-600 hover:bg-teal-700" 
-                : "bg-gray-300 cursor-not-allowed"
+              allRequiredAgreed
+                ? "bg-teal-600 hover:bg-teal-700"
+                : "bg-gray-300 cursor-not-allowed",
             )}
           >
             <span>Continue</span>
@@ -962,11 +1064,16 @@ const AccountCreationStep: React.FC<{
     onNext();
   };
 
-  const motionProps = shouldReduceMotion ? {} : {
-    initial: { y: 20, opacity: 0 },
-    animate: { y: 0, opacity: 1 },
-    transition: { duration: tokens.animation.duration.normal }
-  };
+  const motionDuration = shouldReduceMotion
+    ? 0
+    : parseFloat(tokens.animation.duration.normal);
+  const motionProps = shouldReduceMotion
+    ? {}
+    : {
+        initial: { y: 20, opacity: 0 },
+        animate: { y: 0, opacity: 1 },
+        transition: { duration: motionDuration },
+      };
 
   return (
     <div className="flex-1 flex flex-col p-6">
@@ -991,8 +1098,10 @@ const AccountCreationStep: React.FC<{
         >
           {/* OAuth Options - Prominent placement */}
           <div className="space-y-3">
-            <p className="text-center text-sm text-gray-500">Quick signup options</p>
-            
+            <p className="text-center text-sm text-gray-500">
+              Quick signup options
+            </p>
+
             <Button
               onClick={() => handleOAuthSignup("google")}
               variant="outline"
@@ -1002,7 +1111,9 @@ const AccountCreationStep: React.FC<{
                 <span className="text-white text-xs font-bold">G</span>
               </div>
               <span className="font-medium">Continue with Google</span>
-              <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">Fastest</Badge>
+              <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">
+                Fastest
+              </Badge>
             </Button>
 
             <Button
@@ -1022,7 +1133,9 @@ const AccountCreationStep: React.FC<{
               <Separator className="w-full" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-slate-50 px-2 text-gray-500">Or create manually</span>
+              <span className="bg-slate-50 px-2 text-gray-500">
+                Or create manually
+              </span>
             </div>
           </div>
 
@@ -1085,7 +1198,11 @@ const AccountCreationStep: React.FC<{
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
                 </button>
               </div>
               <p className="text-xs text-gray-500 mt-1">
@@ -1118,7 +1235,9 @@ const AccountCreationStep: React.FC<{
                 className="text-center"
                 initial={shouldReduceMotion ? {} : { scale: 0 }}
                 animate={shouldReduceMotion ? {} : { scale: 1 }}
-                transition={{ delay: shouldReduceMotion ? 0 : 0.3 + index * 0.1 }}
+                transition={{
+                  delay: shouldReduceMotion ? 0 : 0.3 + index * 0.1,
+                }}
               >
                 <div
                   className={cn(
@@ -1155,11 +1274,15 @@ const AccountCreationStep: React.FC<{
 
           {/* Navigation buttons */}
           <div className="flex items-center justify-between pt-4">
-            <Button variant="outline" onClick={onPrev} className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              onClick={onPrev}
+              className="flex items-center space-x-2"
+            >
               <ArrowLeft className="h-4 w-4" />
               <span>Back</span>
             </Button>
-            
+
             <Button
               onClick={validateAndNext}
               className="bg-teal-600 hover:bg-teal-700 flex items-center space-x-2"
@@ -1183,29 +1306,55 @@ const PlaidConnectionStep: React.FC<{
 }> = ({ onNext, onPrev, state, updateState }) => {
   const shouldReduceMotion = useReducedMotion();
   const [isConnecting, setIsConnecting] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<'idle' | 'connecting' | 'success' | 'error'>('idle');
+  const [connectionStatus, setConnectionStatus] = useState<
+    "idle" | "connecting" | "success" | "error"
+  >("idle");
 
   const handlePlaidConnection = async () => {
     setIsConnecting(true);
-    setConnectionStatus('connecting');
+    setConnectionStatus("connecting");
 
     // Simulate Plaid connection process
     setTimeout(() => {
       // Simulate successful connection with discovered bills
       const mockBills = [
-        { id: '1', name: 'Pacific Gas & Electric', amount: 145.67, confidence: 0.98, source: 'plaid' as const },
-        { id: '2', name: 'Comcast Internet', amount: 89.99, confidence: 0.95, source: 'plaid' as const },
-        { id: '3', name: 'State Farm Insurance', amount: 234.50, confidence: 0.92, source: 'plaid' as const },
-        { id: '4', name: 'T-Mobile', amount: 75.00, confidence: 0.89, source: 'plaid' as const },
+        {
+          id: "1",
+          name: "Pacific Gas & Electric",
+          amount: 145.67,
+          confidence: 0.98,
+          source: "plaid" as const,
+        },
+        {
+          id: "2",
+          name: "Comcast Internet",
+          amount: 89.99,
+          confidence: 0.95,
+          source: "plaid" as const,
+        },
+        {
+          id: "3",
+          name: "State Farm Insurance",
+          amount: 234.5,
+          confidence: 0.92,
+          source: "plaid" as const,
+        },
+        {
+          id: "4",
+          name: "T-Mobile",
+          amount: 75.0,
+          confidence: 0.89,
+          source: "plaid" as const,
+        },
       ];
 
-      updateState({ 
+      updateState({
         discoveredBills: mockBills,
-        plaidToken: 'plaid_token_123',
+        plaidToken: "plaid_token_123",
       });
-      setConnectionStatus('success');
+      setConnectionStatus("success");
       setIsConnecting(false);
-      
+
       setTimeout(() => {
         onNext();
       }, 2000);
@@ -1217,14 +1366,19 @@ const PlaidConnectionStep: React.FC<{
     onNext();
   };
 
-  const motionProps = shouldReduceMotion ? {} : {
-    initial: { y: 20, opacity: 0 },
-    animate: { y: 0, opacity: 1 },
-    transition: { duration: tokens.animation.duration.normal }
-  };
+  const motionDuration = shouldReduceMotion
+    ? 0
+    : parseFloat(tokens.animation.duration.normal);
+  const motionProps = shouldReduceMotion
+    ? {}
+    : {
+        initial: { y: 20, opacity: 0 },
+        animate: { y: 0, opacity: 1 },
+        transition: { duration: motionDuration },
+      };
 
   // Show discovery results if we have bills
-  if (connectionStatus === 'success' && state.discoveredBills.length > 0) {
+  if (connectionStatus === "success" && state.discoveredBills.length > 0) {
     return (
       <div className="flex-1 flex flex-col p-6">
         <div className="max-w-2xl mx-auto w-full space-y-6 flex-1 flex flex-col justify-center">
@@ -1238,7 +1392,8 @@ const PlaidConnectionStep: React.FC<{
               Great! We Found {state.discoveredBills.length} Bills
             </h2>
             <p className="text-gray-600">
-              Your bank connection was successful. Here's what we discovered automatically:
+              Your bank connection was successful. Here's what we discovered
+              automatically:
             </p>
           </motion.div>
 
@@ -1254,7 +1409,9 @@ const PlaidConnectionStep: React.FC<{
                 className="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-between"
                 initial={shouldReduceMotion ? {} : { scale: 0, opacity: 0 }}
                 animate={shouldReduceMotion ? {} : { scale: 1, opacity: 1 }}
-                transition={{ delay: shouldReduceMotion ? 0 : 0.3 + index * 0.1 }}
+                transition={{
+                  delay: shouldReduceMotion ? 0 : 0.3 + index * 0.1,
+                }}
               >
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
@@ -1262,16 +1419,20 @@ const PlaidConnectionStep: React.FC<{
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900">{bill.name}</h3>
-                    <p className="text-sm text-gray-600">${bill.amount}/month</p>
+                    <p className="text-sm text-gray-600">
+                      ${bill.amount}/month
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Badge 
+                  <Badge
                     className={cn(
                       "text-xs",
-                      bill.confidence > 0.95 ? "bg-emerald-100 text-emerald-700" :
-                      bill.confidence > 0.9 ? "bg-yellow-100 text-yellow-700" :
-                      "bg-gray-100 text-gray-700"
+                      bill.confidence > 0.95
+                        ? "bg-emerald-100 text-emerald-700"
+                        : bill.confidence > 0.9
+                          ? "bg-yellow-100 text-yellow-700"
+                          : "bg-gray-100 text-gray-700",
                     )}
                   >
                     {Math.round(bill.confidence * 100)}% match
@@ -1302,18 +1463,19 @@ const PlaidConnectionStep: React.FC<{
           <div className="flex items-center justify-center space-x-2">
             <Bank className="h-8 w-8 text-teal-600" />
             <h2 className="text-2xl font-bold text-navy-900 font-display">
-              {state.quickStartMethod === 'plaid' ? 'Connect Your Bank' : 'Connect Bank Account'}
+              {state.quickStartMethod === "plaid"
+                ? "Connect Your Bank"
+                : "Connect Bank Account"}
             </h2>
           </div>
           <p className="text-gray-600">
-            {state.quickStartMethod === 'plaid' 
+            {state.quickStartMethod === "plaid"
               ? "Let's connect your bank account to automatically discover your bills"
-              : "Connect your bank account for the best bill discovery experience"
-            }
+              : "Connect your bank account for the best bill discovery experience"}
           </p>
         </motion.div>
 
-        {connectionStatus === 'idle' && (
+        {connectionStatus === "idle" && (
           <motion.div
             className="space-y-6"
             initial={shouldReduceMotion ? {} : { y: 20, opacity: 0 }}
@@ -1326,24 +1488,44 @@ const PlaidConnectionStep: React.FC<{
                   <Shield className="h-6 w-6 text-emerald-600" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">Bank-Level Security</h3>
-                  <p className="text-sm text-gray-600">Powered by Plaid - trusted by millions</p>
+                  <h3 className="font-semibold text-gray-900">
+                    Bank-Level Security
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Powered by Plaid - trusted by millions
+                  </p>
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-4 text-center">
                 {[
-                  { icon: <Lock className="h-5 w-5" />, label: "256-bit SSL", description: "Encryption" },
-                  { icon: <Eye className="h-5 w-5" />, label: "Read-only", description: "Access" },
-                  { icon: <Shield className="h-5 w-5" />, label: "Never stored", description: "Credentials" },
+                  {
+                    icon: <Lock className="h-5 w-5" />,
+                    label: "256-bit SSL",
+                    description: "Encryption",
+                  },
+                  {
+                    icon: <Eye className="h-5 w-5" />,
+                    label: "Read-only",
+                    description: "Access",
+                  },
+                  {
+                    icon: <Shield className="h-5 w-5" />,
+                    label: "Never stored",
+                    description: "Credentials",
+                  },
                 ].map((feature, index) => (
                   <div key={feature.label} className="space-y-2">
                     <div className="w-10 h-10 bg-green-100 rounded-full mx-auto flex items-center justify-center text-green-600">
                       {feature.icon}
                     </div>
                     <div>
-                      <p className="text-xs font-semibold text-gray-900">{feature.label}</p>
-                      <p className="text-xs text-gray-600">{feature.description}</p>
+                      <p className="text-xs font-semibold text-gray-900">
+                        {feature.label}
+                      </p>
+                      <p className="text-xs text-gray-600">
+                        {feature.description}
+                      </p>
                     </div>
                   </div>
                 ))}
@@ -1370,12 +1552,13 @@ const PlaidConnectionStep: React.FC<{
             </div>
 
             <div className="text-center text-xs text-gray-500">
-              Your credentials are never stored and we can only read transaction data, not move money
+              Your credentials are never stored and we can only read transaction
+              data, not move money
             </div>
           </motion.div>
         )}
 
-        {connectionStatus === 'connecting' && (
+        {connectionStatus === "connecting" && (
           <motion.div
             className="text-center space-y-6"
             initial={shouldReduceMotion ? {} : { opacity: 0 }}
@@ -1385,21 +1568,32 @@ const PlaidConnectionStep: React.FC<{
               <Loader2 className="h-8 w-8 text-emerald-600 animate-spin" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">Connecting to your bank...</h3>
-              <p className="text-gray-600">This may take a few moments while we securely connect and scan for bills</p>
+              <h3 className="text-lg font-semibold text-gray-900">
+                Connecting to your bank...
+              </h3>
+              <p className="text-gray-600">
+                This may take a few moments while we securely connect and scan
+                for bills
+              </p>
             </div>
             <div className="space-y-2 text-sm text-gray-600">
               <p>✓ Establishing secure connection</p>
               <p>✓ Authenticating account access</p>
-              <p className="text-emerald-600">⟳ Scanning transactions for bills...</p>
+              <p className="text-emerald-600">
+                ⟳ Scanning transactions for bills...
+              </p>
             </div>
           </motion.div>
         )}
 
         {/* Navigation buttons for non-connecting states */}
-        {connectionStatus === 'idle' && (
+        {connectionStatus === "idle" && (
           <div className="flex items-center justify-between">
-            <Button variant="outline" onClick={onPrev} className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              onClick={onPrev}
+              className="flex items-center space-x-2"
+            >
               <ArrowLeft className="h-4 w-4" />
               <span>Back</span>
             </Button>
@@ -1450,7 +1644,7 @@ const HouseholdSetupStep: React.FC<{
     },
   ];
 
-  const handleTypeSelect = (type: typeof householdTypes[0]['id']) => {
+  const handleTypeSelect = (type: (typeof householdTypes)[0]["id"]) => {
     updateState({ householdType: type });
     // Simulate location detection
     setTimeout(() => {
@@ -1470,11 +1664,16 @@ const HouseholdSetupStep: React.FC<{
     onNext();
   };
 
-  const motionProps = shouldReduceMotion ? {} : {
-    initial: { y: 20, opacity: 0 },
-    animate: { y: 0, opacity: 1 },
-    transition: { duration: tokens.animation.duration.normal }
-  };
+  const motionDuration = shouldReduceMotion
+    ? 0
+    : parseFloat(tokens.animation.duration.normal);
+  const motionProps = shouldReduceMotion
+    ? {}
+    : {
+        initial: { y: 20, opacity: 0 },
+        animate: { y: 0, opacity: 1 },
+        transition: { duration: motionDuration },
+      };
 
   return (
     <div className="flex-1 flex flex-col p-6">
@@ -1487,7 +1686,8 @@ const HouseholdSetupStep: React.FC<{
             </h2>
           </div>
           <p className="text-gray-600">
-            This helps us understand what types of bills you might have and how to organize them
+            This helps us understand what types of bills you might have and how
+            to organize them
           </p>
         </motion.div>
 
@@ -1505,7 +1705,7 @@ const HouseholdSetupStep: React.FC<{
                 "p-6 border-2 rounded-xl text-left transition-all duration-200",
                 state.householdType === type.id
                   ? "border-teal-300 bg-teal-50"
-                  : "border-gray-200 hover:border-gray-300 bg-white"
+                  : "border-gray-200 hover:border-gray-300 bg-white",
               )}
               initial={shouldReduceMotion ? {} : { scale: 0, opacity: 0 }}
               animate={shouldReduceMotion ? {} : { scale: 1, opacity: 1 }}
@@ -1514,11 +1714,18 @@ const HouseholdSetupStep: React.FC<{
               whileTap={shouldReduceMotion ? {} : { scale: 0.98 }}
             >
               <div className="flex items-start space-x-4">
-                <div className={cn("w-12 h-12 rounded-full flex items-center justify-center", type.color)}>
+                <div
+                  className={cn(
+                    "w-12 h-12 rounded-full flex items-center justify-center",
+                    type.color,
+                  )}
+                >
                   {type.icon}
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900 mb-1">{type.title}</h3>
+                  <h3 className="font-semibold text-gray-900 mb-1">
+                    {type.title}
+                  </h3>
                   <p className="text-sm text-gray-600">{type.description}</p>
                 </div>
                 {state.householdType === type.id && (
@@ -1540,14 +1747,19 @@ const HouseholdSetupStep: React.FC<{
               <MapPin className="h-5 w-5 text-teal-600" />
               <h3 className="font-semibold text-gray-900">Location</h3>
               {state.address.city && (
-                <Badge className="bg-green-100 text-green-700">Auto-detected</Badge>
+                <Badge className="bg-green-100 text-green-700">
+                  Auto-detected
+                </Badge>
               )}
             </div>
-            
+
             {state.address.city ? (
               <div className="flex items-center space-x-2 text-sm text-gray-600">
                 <Globe className="h-4 w-4" />
-                <span>{state.address.city}, {state.address.state} {state.address.zip}</span>
+                <span>
+                  {state.address.city}, {state.address.state}{" "}
+                  {state.address.zip}
+                </span>
               </div>
             ) : (
               <div className="flex items-center space-x-2 text-sm text-gray-500">
@@ -1560,19 +1772,23 @@ const HouseholdSetupStep: React.FC<{
 
         {/* Navigation buttons */}
         <div className="flex items-center justify-between">
-          <Button variant="outline" onClick={onPrev} className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            onClick={onPrev}
+            className="flex items-center space-x-2"
+          >
             <ArrowLeft className="h-4 w-4" />
             <span>Back</span>
           </Button>
-          
+
           <Button
             onClick={validateAndNext}
             disabled={!state.householdType}
             className={cn(
               "flex items-center space-x-2",
-              state.householdType 
-                ? "bg-teal-600 hover:bg-teal-700" 
-                : "bg-gray-300 cursor-not-allowed"
+              state.householdType
+                ? "bg-teal-600 hover:bg-teal-700"
+                : "bg-gray-300 cursor-not-allowed",
             )}
           >
             <span>Continue</span>
@@ -1597,11 +1813,16 @@ const PersonalizationStep: React.FC<{
     onNext();
   };
 
-  const motionProps = shouldReduceMotion ? {} : {
-    initial: { y: 20, opacity: 0 },
-    animate: { y: 0, opacity: 1 },
-    transition: { duration: tokens.animation.duration.normal }
-  };
+  const motionDuration = shouldReduceMotion
+    ? 0
+    : parseFloat(tokens.animation.duration.normal);
+  const motionProps = shouldReduceMotion
+    ? {}
+    : {
+        initial: { y: 20, opacity: 0 },
+        animate: { y: 0, opacity: 1 },
+        transition: { duration: motionDuration },
+      };
 
   return (
     <div className="flex-1 flex flex-col p-6">
@@ -1641,7 +1862,9 @@ const PersonalizationStep: React.FC<{
                 <SelectItem value="5k-8k">$5,000 - $8,000</SelectItem>
                 <SelectItem value="8k-12k">$8,000 - $12,000</SelectItem>
                 <SelectItem value="over-12k">Over $12,000</SelectItem>
-                <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
+                <SelectItem value="prefer-not-to-say">
+                  Prefer not to say
+                </SelectItem>
               </SelectContent>
             </Select>
             <p className="text-xs text-gray-500 mt-1">
@@ -1655,26 +1878,44 @@ const PersonalizationStep: React.FC<{
             </label>
             <div className="space-y-2">
               {[
-                { value: "weekly", label: "Weekly", description: "Get reminded every week" },
-                { value: "monthly", label: "Monthly", description: "Traditional monthly billing" },
-                { value: "varies", label: "It varies", description: "Different for each bill" },
+                {
+                  value: "weekly",
+                  label: "Weekly",
+                  description: "Get reminded every week",
+                },
+                {
+                  value: "monthly",
+                  label: "Monthly",
+                  description: "Traditional monthly billing",
+                },
+                {
+                  value: "varies",
+                  label: "It varies",
+                  description: "Different for each bill",
+                },
               ].map((option) => (
                 <motion.button
                   key={option.value}
-                  onClick={() => updateState({ billFrequency: option.value as any })}
+                  onClick={() =>
+                    updateState({ billFrequency: option.value as any })
+                  }
                   className={cn(
                     "w-full p-4 border-2 rounded-lg text-left transition-all duration-200",
                     state.billFrequency === option.value
                       ? "border-teal-300 bg-teal-50"
-                      : "border-gray-200 hover:border-gray-300 bg-white"
+                      : "border-gray-200 hover:border-gray-300 bg-white",
                   )}
                   whileHover={shouldReduceMotion ? {} : { scale: 1.01 }}
                   whileTap={shouldReduceMotion ? {} : { scale: 0.99 }}
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-medium text-gray-900">{option.label}</h3>
-                      <p className="text-sm text-gray-600">{option.description}</p>
+                      <h3 className="font-medium text-gray-900">
+                        {option.label}
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        {option.description}
+                      </p>
                     </div>
                     {state.billFrequency === option.value && (
                       <CheckCircle className="h-5 w-5 text-teal-600" />
@@ -1692,24 +1933,41 @@ const PersonalizationStep: React.FC<{
             </label>
             <div className="grid grid-cols-1 gap-2">
               {[
-                { icon: <DollarSign className="h-4 w-4" />, label: "Save money on bills" },
-                { icon: <Zap className="h-4 w-4" />, label: "Automate payments" },
-                { icon: <Clock className="h-4 w-4" />, label: "Never miss due dates" },
-                { icon: <TrendingUp className="h-4 w-4" />, label: "Track spending trends" },
+                {
+                  icon: <DollarSign className="h-4 w-4" />,
+                  label: "Save money on bills",
+                },
+                {
+                  icon: <Zap className="h-4 w-4" />,
+                  label: "Automate payments",
+                },
+                {
+                  icon: <Clock className="h-4 w-4" />,
+                  label: "Never miss due dates",
+                },
+                {
+                  icon: <TrendingUp className="h-4 w-4" />,
+                  label: "Track spending trends",
+                },
               ].map((goal, index) => (
                 <motion.div
                   key={goal.label}
                   className="flex items-center space-x-3 p-3 bg-white border border-gray-200 rounded-lg"
                   initial={shouldReduceMotion ? {} : { opacity: 0, x: -20 }}
                   animate={shouldReduceMotion ? {} : { opacity: 1, x: 0 }}
-                  transition={{ delay: shouldReduceMotion ? 0 : 0.3 + index * 0.1 }}
+                  transition={{
+                    delay: shouldReduceMotion ? 0 : 0.3 + index * 0.1,
+                  }}
                 >
                   <Checkbox id={goal.label} />
                   <div className="flex items-center space-x-2">
                     <div className="w-6 h-6 bg-teal-100 rounded-full flex items-center justify-center text-teal-600">
                       {goal.icon}
                     </div>
-                    <label htmlFor={goal.label} className="text-sm font-medium text-gray-900 cursor-pointer">
+                    <label
+                      htmlFor={goal.label}
+                      className="text-sm font-medium text-gray-900 cursor-pointer"
+                    >
                       {goal.label}
                     </label>
                   </div>
@@ -1721,11 +1979,15 @@ const PersonalizationStep: React.FC<{
 
         {/* Navigation buttons */}
         <div className="flex items-center justify-between">
-          <Button variant="outline" onClick={onPrev} className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            onClick={onPrev}
+            className="flex items-center space-x-2"
+          >
             <ArrowLeft className="h-4 w-4" />
             <span>Back</span>
           </Button>
-          
+
           <Button
             onClick={validateAndNext}
             className="bg-teal-600 hover:bg-teal-700 flex items-center space-x-2"
@@ -1746,33 +2008,39 @@ const CompletionStep: React.FC<{
 }> = ({ onComplete, state }) => {
   const shouldReduceMotion = useReducedMotion();
 
-  const motionProps = shouldReduceMotion ? {} : {
-    initial: { y: 20, opacity: 0 },
-    animate: { y: 0, opacity: 1 },
-    transition: { duration: tokens.animation.duration.normal }
-  };
+  const motionDuration = shouldReduceMotion
+    ? 0
+    : parseFloat(tokens.animation.duration.normal);
+  const motionProps = shouldReduceMotion
+    ? {}
+    : {
+        initial: { y: 20, opacity: 0 },
+        animate: { y: 0, opacity: 1 },
+        transition: { duration: motionDuration },
+      };
 
   return (
     <div className="flex-1 flex flex-col p-6">
       <div className="max-w-2xl mx-auto w-full space-y-8 flex-1 flex flex-col justify-center">
         <motion.div className="text-center space-y-6" {...motionProps}>
           <div className="flex items-center justify-center">
-            <div 
+            <div
               className="w-20 h-20 rounded-full bg-gradient-to-r from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg"
               style={{
-                background: `linear-gradient(135deg, ${tokens.colors.semantic.success}, ${tokens.colors.primary.teal[500]})`
+                background: `linear-gradient(135deg, ${tokens.colors.semantic.success}, ${tokens.colors.primary.teal[500]})`,
               }}
             >
               <CheckCircle className="h-10 w-10 text-white" />
             </div>
           </div>
-          
+
           <div className="space-y-3">
             <h1 className="text-4xl font-bold text-navy-900 font-display">
               You're All Set!
             </h1>
             <p className="text-xl text-gray-600 max-w-lg mx-auto">
-              Welcome to BillBuddy! Your personalized bill management dashboard is ready.
+              Welcome to BillBuddy! Your personalized bill management dashboard
+              is ready.
             </p>
           </div>
 
@@ -1783,46 +2051,60 @@ const CompletionStep: React.FC<{
             animate={shouldReduceMotion ? {} : { opacity: 1, y: 0 }}
             transition={{ delay: shouldReduceMotion ? 0 : 0.2 }}
           >
-            <h3 className="font-semibold text-gray-900 text-center mb-4">Here's what we've set up for you:</h3>
-            
+            <h3 className="font-semibold text-gray-900 text-center mb-4">
+              Here's what we've set up for you:
+            </h3>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-3">
                 <div className="flex items-center space-x-3">
                   <CheckCircle className="h-5 w-5 text-emerald-600" />
-                  <span className="text-sm text-gray-700">Secure account created</span>
+                  <span className="text-sm text-gray-700">
+                    Secure account created
+                  </span>
                 </div>
-                
+
                 {state.plaidToken && (
                   <div className="flex items-center space-x-3">
                     <CheckCircle className="h-5 w-5 text-emerald-600" />
-                    <span className="text-sm text-gray-700">Bank account connected</span>
+                    <span className="text-sm text-gray-700">
+                      Bank account connected
+                    </span>
                   </div>
                 )}
-                
+
                 {state.discoveredBills.length > 0 && (
                   <div className="flex items-center space-x-3">
                     <CheckCircle className="h-5 w-5 text-emerald-600" />
-                    <span className="text-sm text-gray-700">{state.discoveredBills.length} bills discovered</span>
+                    <span className="text-sm text-gray-700">
+                      {state.discoveredBills.length} bills discovered
+                    </span>
                   </div>
                 )}
               </div>
-              
+
               <div className="space-y-3">
                 {state.householdType && (
                   <div className="flex items-center space-x-3">
                     <CheckCircle className="h-5 w-5 text-emerald-600" />
-                    <span className="text-sm text-gray-700">Household type configured</span>
+                    <span className="text-sm text-gray-700">
+                      Household type configured
+                    </span>
                   </div>
                 )}
-                
+
                 <div className="flex items-center space-x-3">
                   <CheckCircle className="h-5 w-5 text-emerald-600" />
-                  <span className="text-sm text-gray-700">Preferences saved</span>
+                  <span className="text-sm text-gray-700">
+                    Preferences saved
+                  </span>
                 </div>
-                
+
                 <div className="flex items-center space-x-3">
                   <CheckCircle className="h-5 w-5 text-emerald-600" />
-                  <span className="text-sm text-gray-700">Security enabled</span>
+                  <span className="text-sm text-gray-700">
+                    Security enabled
+                  </span>
                 </div>
               </div>
             </div>
@@ -1837,10 +2119,11 @@ const CompletionStep: React.FC<{
               transition={{ delay: shouldReduceMotion ? 0 : 0.4 }}
             >
               <p className="text-sm text-teal-800">
-                💡 <strong>Pro tip:</strong> We'll continue scanning your transactions to find more bills automatically. 
-                You can review and confirm them in your dashboard.
+                💡 <strong>Pro tip:</strong> We'll continue scanning your
+                transactions to find more bills automatically. You can review
+                and confirm them in your dashboard.
               </p>
-            </div>
+            </motion.div>
           )}
         </motion.div>
 
