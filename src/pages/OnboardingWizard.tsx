@@ -530,16 +530,16 @@ const OnboardingWizard: React.FC = () => {
       </div>
 
       {/* Main content */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={state.step}
-          className="flex-1"
-          style={{ opacity: 1 }} // Fallback to ensure visibility
-          {...motionProps}
-        >
-          {getCurrentStepComponent()}
-        </motion.div>
-      </AnimatePresence>
+      <div
+        className="flex-1"
+        style={{
+          opacity: 1,
+          visibility: "visible",
+          minHeight: "400px",
+        }}
+      >
+        {getCurrentStepComponent()}
+      </div>
     </div>
   );
 };
@@ -571,14 +571,20 @@ const WelcomeStep: React.FC<{
   const motionProps = shouldReduceMotion
     ? {}
     : {
-        initial: { y: 20, opacity: 0 },
-        animate: { y: 0, opacity: 1 },
+        initial: { y: 10 },
+        animate: { y: 0 },
         transition: { duration: motionDuration },
       };
 
   return (
-    <div className="flex-1 flex flex-col p-6">
-      <div className="max-w-2xl mx-auto w-full space-y-8 flex-1 flex flex-col justify-center">
+    <div
+      className="flex-1 flex flex-col p-6"
+      style={{ opacity: 1, visibility: "visible" }}
+    >
+      <div
+        className="max-w-2xl mx-auto w-full space-y-8 flex-1 flex flex-col justify-center"
+        style={{ opacity: 1, visibility: "visible" }}
+      >
         <motion.div className="text-center space-y-6" {...motionProps}>
           <div className="flex items-center justify-center">
             <div
@@ -792,8 +798,8 @@ const LegalAgreementsStep: React.FC<{
   const motionProps = shouldReduceMotion
     ? {}
     : {
-        initial: { y: 20, opacity: 0 },
-        animate: { y: 0, opacity: 1 },
+        initial: { y: 10 },
+        animate: { y: 0 },
         transition: { duration: motionDuration },
       };
 
