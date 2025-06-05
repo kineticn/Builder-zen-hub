@@ -478,16 +478,14 @@ const OnboardingWizard: React.FC = () => {
     }
   };
 
-  const motionDuration = shouldReduceMotion
-    ? 0
-    : parseFloat(tokens.animation.duration.normal);
+  const motionDuration = shouldReduceMotion ? 0 : 0.2; // 200ms in seconds
   const motionProps = shouldReduceMotion
     ? {}
     : {
         initial: { opacity: 0 },
         animate: { opacity: 1 },
         exit: { opacity: 0 },
-        transition: { duration: motionDuration },
+      transition={{ duration: shouldReduceMotion ? 0 : 0.2 }}
       };
 
   return (
@@ -558,16 +556,12 @@ const WelcomeStep: React.FC<{
     onNext();
   };
 
-  const motionDuration = shouldReduceMotion
-    ? 0
-    : parseFloat(tokens.animation.duration.normal);
-  const motionProps = shouldReduceMotion
-    ? {}
-    : {
-        initial: { y: 20, opacity: 0 },
-        animate: { y: 0, opacity: 1 },
-        transition: { duration: motionDuration },
-      };
+  const motionDuration = shouldReduceMotion ? 0 : 0.2;
+  const motionProps = shouldReduceMotion ? {} : {
+    initial: { y: 20, opacity: 0 },
+    animate: { y: 0, opacity: 1 },
+    transition: { duration: motionDuration }
+  };
 
   return (
     <div className="flex-1 flex flex-col p-6">
