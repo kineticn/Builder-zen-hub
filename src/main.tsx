@@ -56,31 +56,33 @@ if (typeof window !== "undefined") {
 const root = createRoot(document.getElementById("root")!);
 
 root.render(
-  <ErrorBoundary
-    onError={(error, errorInfo) => {
-      // Comprehensive error suppression for third-party issues
-      if (
-        error.message.includes("cross-origin") ||
-        error.message.includes("dispatchEvent") ||
-        error.message.includes("partytown") ||
-        error.message.includes("SecurityError") ||
-        error.message.includes("frame")
-      ) {
-        console.warn("Third-party error suppressed:", error.message);
-        return;
-      }
-      console.error("Application error:", error, errorInfo);
-    }}
-  >
-    {/* Main App Component */}
-    <App />
+  <div style={{ opacity: 1, minHeight: "100vh", position: "relative" }}>
+    <ErrorBoundary
+      onError={(error, errorInfo) => {
+        // Comprehensive error suppression for third-party issues
+        if (
+          error.message.includes("cross-origin") ||
+          error.message.includes("dispatchEvent") ||
+          error.message.includes("partytown") ||
+          error.message.includes("SecurityError") ||
+          error.message.includes("frame")
+        ) {
+          console.warn("Third-party error suppressed:", error.message);
+          return;
+        }
+        console.error("Application error:", error, errorInfo);
+      }}
+    >
+      {/* Main App Component */}
+      <App />
 
-    {/* Safe script loader without Partytown - completely eliminates SecurityError */}
-    <SafeScriptLoader hasConsent={hasConsent} />
+      {/* Safe script loader without Partytown - completely eliminates SecurityError */}
+      <SafeScriptLoader hasConsent={hasConsent} />
 
-    {/* Show consent banner if no consent given */}
-    <ConsentBanner />
-  </ErrorBoundary>,
+      {/* Show consent banner if no consent given */}
+      <ConsentBanner />
+    </ErrorBoundary>
+  </div>,
 );
 
 // Consent Banner Component
