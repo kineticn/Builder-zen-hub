@@ -203,15 +203,9 @@ const StepTransitionSkeleton: React.FC<{ step: number }> = ({ step }) => {
   const shouldReduceMotion = useReducedMotion();
 
   return (
-    <motion.div
+    <div
       className="flex-1 flex flex-col p-6"
-      initial={shouldReduceMotion ? {} : { opacity: 0 }}
-      animate={shouldReduceMotion ? {} : { opacity: 1 }}
-      transition={{
-        duration: shouldReduceMotion
-          ? 0
-          : parseFloat(tokens.animation.duration.normal),
-      }}
+      style={{ opacity: 1, visibility: "visible" }}
     >
       <div className="max-w-2xl mx-auto w-full space-y-6 flex-1 flex flex-col">
         {/* Header skeleton */}
@@ -283,7 +277,7 @@ const StepTransitionSkeleton: React.FC<{ step: number }> = ({ step }) => {
         {/* Button skeleton */}
         <Skeleton className="h-12 w-full" variant="pulse" />
       </div>
-    </motion.div>
+    </div>
   );
 };
 
@@ -407,86 +401,96 @@ const OnboardingWizard: React.FC = () => {
       return <StepTransitionSkeleton step={state.step} />;
     }
 
+    const stepStyle = { opacity: 1, visibility: "visible" as const }; // Force visibility
+
     switch (state.step) {
       case 1:
         return (
-          <WelcomeStep
-            onNext={nextStep}
-            state={state}
-            onMethodSelect={(method) =>
-              updateState({ quickStartMethod: method })
-            }
-          />
+          <div style={stepStyle}>
+            <WelcomeStep
+              onNext={nextStep}
+              state={state}
+              onMethodSelect={(method) =>
+                updateState({ quickStartMethod: method })
+              }
+            />
+          </div>
         );
       case 2:
         return (
-          <LegalAgreementsStep
-            onNext={nextStep}
-            onPrev={prevStep}
-            state={state}
-            onAgreementChange={handleAgreementChange}
-          />
+          <div style={stepStyle}>
+            <LegalAgreementsStep
+              onNext={nextStep}
+              onPrev={prevStep}
+              state={state}
+              onAgreementChange={handleAgreementChange}
+            />
+          </div>
         );
       case 3:
         return (
-          <AccountCreationStep
-            onNext={nextStep}
-            onPrev={prevStep}
-            state={state}
-            updateState={updateState}
-          />
+          <div style={stepStyle}>
+            <AccountCreationStep
+              onNext={nextStep}
+              onPrev={prevStep}
+              state={state}
+              updateState={updateState}
+            />
+          </div>
         );
       case 4:
         return (
-          <PlaidConnectionStep
-            onNext={nextStep}
-            onPrev={prevStep}
-            state={state}
-            updateState={updateState}
-          />
+          <div style={stepStyle}>
+            <PlaidConnectionStep
+              onNext={nextStep}
+              onPrev={prevStep}
+              state={state}
+              updateState={updateState}
+            />
+          </div>
         );
       case 5:
         return (
-          <HouseholdSetupStep
-            onNext={nextStep}
-            onPrev={prevStep}
-            state={state}
-            updateState={updateState}
-          />
+          <div style={stepStyle}>
+            <HouseholdSetupStep
+              onNext={nextStep}
+              onPrev={prevStep}
+              state={state}
+              updateState={updateState}
+            />
+          </div>
         );
       case 6:
         return (
-          <PersonalizationStep
-            onNext={nextStep}
-            onPrev={prevStep}
-            state={state}
-            updateState={updateState}
-          />
+          <div style={stepStyle}>
+            <PersonalizationStep
+              onNext={nextStep}
+              onPrev={prevStep}
+              state={state}
+              updateState={updateState}
+            />
+          </div>
         );
       case 7:
-        return <CompletionStep onComplete={handleComplete} state={state} />;
+        return (
+          <div style={stepStyle}>
+            <CompletionStep onComplete={handleComplete} state={state} />
+          </div>
+        );
       default:
         return (
-          <WelcomeStep
-            onNext={nextStep}
-            state={state}
-            onMethodSelect={(method) =>
-              updateState({ quickStartMethod: method })
-            }
-          />
+          <div style={stepStyle}>
+            <WelcomeStep
+              onNext={nextStep}
+              state={state}
+              onMethodSelect={(method) =>
+                updateState({ quickStartMethod: method })
+              }
+            />
+          </div>
         );
     }
   };
-
-  const motionDuration = shouldReduceMotion ? 0 : 0.2; // 200ms in seconds
-  const motionProps = shouldReduceMotion
-    ? {}
-    : {
-        initial: { opacity: 0 },
-        animate: { opacity: 1 },
-        exit: { opacity: 0 },
-        transition: { duration: motionDuration },
-      };
 
   return (
     <div
@@ -567,25 +571,13 @@ const WelcomeStep: React.FC<{
     onNext();
   };
 
-  const motionDuration = shouldReduceMotion ? 0 : 0.2;
-  const motionProps = shouldReduceMotion
-    ? {}
-    : {
-        initial: { y: 10 },
-        animate: { y: 0 },
-        transition: { duration: motionDuration },
-      };
-
   return (
     <div
       className="flex-1 flex flex-col p-6"
       style={{ opacity: 1, visibility: "visible" }}
     >
-      <div
-        className="max-w-2xl mx-auto w-full space-y-8 flex-1 flex flex-col justify-center"
-        style={{ opacity: 1, visibility: "visible" }}
-      >
-        <div className="text-center space-y-6" style={{ opacity: 1, visibility: 'visible' }}>
+      <div className="max-w-2xl mx-auto w-full space-y-8 flex-1 flex flex-col justify-center">
+        <div className="text-center space-y-6">
           <div className="flex items-center justify-center">
             <div
               className="w-20 h-20 rounded-full bg-gradient-to-r from-teal-400 to-teal-500 flex items-center justify-center shadow-lg"
@@ -607,12 +599,9 @@ const WelcomeStep: React.FC<{
           </div>
 
           {/* Rotating tip */}
-          <motion.div
+          <div
             key={rotatingTipIndex}
             className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm"
-            initial={shouldReduceMotion ? {} : { scale: 0.95, opacity: 0 }}
-            animate={shouldReduceMotion ? {} : { scale: 1, opacity: 1 }}
-            transition={{ duration: shouldReduceMotion ? 0 : 0.3 }}
           >
             <div className="flex items-center space-x-3">
               <div
@@ -632,25 +621,18 @@ const WelcomeStep: React.FC<{
                 </p>
               </div>
             </div>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
 
-        <motion.div
-          className="space-y-4"
-          initial={shouldReduceMotion ? {} : { y: 20, opacity: 0 }}
-          animate={shouldReduceMotion ? {} : { y: 0, opacity: 1 }}
-          transition={{ delay: shouldReduceMotion ? 0 : 0.2 }}
-        >
+        <div className="space-y-4">
           <h2 className="text-center text-lg font-semibold text-gray-900 mb-6">
             How would you like to get started?
           </h2>
 
           {/* Plaid-first option */}
-          <motion.button
+          <button
             onClick={() => handleMethodSelect("plaid")}
             className="w-full p-6 bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-200 rounded-xl hover:border-emerald-300 transition-all duration-200 group"
-            whileHover={shouldReduceMotion ? {} : { scale: 1.02 }}
-            whileTap={shouldReduceMotion ? {} : { scale: 0.98 }}
           >
             <div className="flex items-center space-x-4">
               <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center group-hover:bg-emerald-200 transition-colors">
@@ -677,14 +659,12 @@ const WelcomeStep: React.FC<{
               </div>
               <ArrowRight className="h-5 w-5 text-emerald-600 group-hover:translate-x-1 transition-transform" />
             </div>
-          </motion.button>
+          </button>
 
           {/* Gmail option */}
-          <motion.button
+          <button
             onClick={() => handleMethodSelect("gmail")}
             className="w-full p-4 bg-white border-2 border-gray-200 rounded-xl hover:border-gray-300 transition-all duration-200 group"
-            whileHover={shouldReduceMotion ? {} : { scale: 1.01 }}
-            whileTap={shouldReduceMotion ? {} : { scale: 0.99 }}
           >
             <div className="flex items-center space-x-4">
               <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
@@ -700,14 +680,12 @@ const WelcomeStep: React.FC<{
               </div>
               <ArrowRight className="h-4 w-4 text-gray-400 group-hover:translate-x-1 transition-transform" />
             </div>
-          </motion.button>
+          </button>
 
           {/* Manual option */}
-          <motion.button
+          <button
             onClick={() => handleMethodSelect("manual")}
             className="w-full p-4 bg-white border-2 border-gray-200 rounded-xl hover:border-gray-300 transition-all duration-200 group"
-            whileHover={shouldReduceMotion ? {} : { scale: 1.01 }}
-            whileTap={shouldReduceMotion ? {} : { scale: 0.99 }}
           >
             <div className="flex items-center space-x-4">
               <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
@@ -721,8 +699,8 @@ const WelcomeStep: React.FC<{
               </div>
               <ArrowRight className="h-4 w-4 text-gray-400 group-hover:translate-x-1 transition-transform" />
             </div>
-          </motion.button>
-        </motion.div>
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -792,21 +770,13 @@ const LegalAgreementsStep: React.FC<{
     }
   };
 
-  const motionDuration = shouldReduceMotion
-    ? 0
-    : parseFloat(tokens.animation.duration.normal);
-  const motionProps = shouldReduceMotion
-    ? {}
-    : {
-        initial: { y: 10 },
-        animate: { y: 0 },
-        transition: { duration: motionDuration },
-      };
-
   return (
-    <div className="flex-1 flex flex-col p-6">
+    <div
+      className="flex-1 flex flex-col p-6"
+      style={{ opacity: 1, visibility: "visible" }}
+    >
       <div className="max-w-2xl mx-auto w-full space-y-6 flex-1 flex flex-col">
-        <motion.div className="text-center space-y-4" {...motionProps}>
+        <div className="text-center space-y-4">
           <div className="flex items-center justify-center space-x-2">
             <Shield className="h-8 w-8 text-teal-600" />
             <h2 className="text-2xl font-bold text-navy-900 font-display">
@@ -831,14 +801,9 @@ const LegalAgreementsStep: React.FC<{
               </p>
             </div>
           </div>
-        </motion.div>
+        </div>
 
-        <motion.div
-          className="flex-1"
-          initial={shouldReduceMotion ? {} : { y: 20, opacity: 0 }}
-          animate={shouldReduceMotion ? {} : { y: 0, opacity: 1 }}
-          transition={{ delay: shouldReduceMotion ? 0 : 0.1 }}
-        >
+        <div className="flex-1">
           <ScrollArea className="h-96 pr-4">
             <div className="space-y-6">
               {/* Required Agreements */}
@@ -855,7 +820,7 @@ const LegalAgreementsStep: React.FC<{
 
                 <div className="space-y-3">
                   {requiredAgreements.map((agreement) => (
-                    <motion.div
+                    <div
                       key={agreement.id}
                       className={cn(
                         "border rounded-lg p-4 transition-all duration-200",
@@ -863,7 +828,6 @@ const LegalAgreementsStep: React.FC<{
                           ? "border-teal-300 bg-teal-50"
                           : "border-gray-200 hover:border-gray-300",
                       )}
-                      whileHover={shouldReduceMotion ? {} : { scale: 1.01 }}
                     >
                       <div className="flex items-start space-x-3">
                         <Checkbox
@@ -908,7 +872,7 @@ const LegalAgreementsStep: React.FC<{
                           </a>
                         </div>
                       </div>
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -929,7 +893,7 @@ const LegalAgreementsStep: React.FC<{
 
                 <div className="space-y-3">
                   {optionalAgreements.map((agreement) => (
-                    <motion.div
+                    <div
                       key={agreement.id}
                       className={cn(
                         "border rounded-lg p-4 transition-all duration-200",
@@ -937,7 +901,6 @@ const LegalAgreementsStep: React.FC<{
                           ? "border-blue-300 bg-blue-50"
                           : "border-gray-200 hover:border-gray-300",
                       )}
-                      whileHover={shouldReduceMotion ? {} : { scale: 1.01 }}
                     >
                       <div className="flex items-start space-x-3">
                         <Checkbox
@@ -982,21 +945,17 @@ const LegalAgreementsStep: React.FC<{
                           </a>
                         </div>
                       </div>
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
               </div>
             </div>
           </ScrollArea>
-        </motion.div>
+        </div>
 
         {/* Error display */}
         {errors.length > 0 && (
-          <motion.div
-            className="bg-red-50 border border-red-200 rounded-lg p-3"
-            initial={shouldReduceMotion ? {} : { opacity: 0, y: 10 }}
-            animate={shouldReduceMotion ? {} : { opacity: 1, y: 0 }}
-          >
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
             <div className="flex items-center space-x-2">
               <AlertTriangle className="h-4 w-4 text-red-500" />
               <div className="text-sm text-red-700">
@@ -1005,7 +964,7 @@ const LegalAgreementsStep: React.FC<{
                 ))}
               </div>
             </div>
-          </motion.div>
+          </div>
         )}
 
         {/* Navigation buttons */}
@@ -1077,21 +1036,13 @@ const AccountCreationStep: React.FC<{
     onNext();
   };
 
-  const motionDuration = shouldReduceMotion
-    ? 0
-    : parseFloat(tokens.animation.duration.normal);
-  const motionProps = shouldReduceMotion
-    ? {}
-    : {
-        initial: { y: 20, opacity: 0 },
-        animate: { y: 0, opacity: 1 },
-        transition: { duration: motionDuration },
-      };
-
   return (
-    <div className="flex-1 flex flex-col p-6">
+    <div
+      className="flex-1 flex flex-col p-6"
+      style={{ opacity: 1, visibility: "visible" }}
+    >
       <div className="max-w-md mx-auto w-full space-y-6 flex-1 flex flex-col justify-center">
-        <motion.div className="text-center space-y-4" {...motionProps}>
+        <div className="text-center space-y-4">
           <div className="flex items-center justify-center space-x-2">
             <UserCheck className="h-8 w-8 text-teal-600" />
             <h2 className="text-2xl font-bold text-navy-900 font-display">
@@ -1101,14 +1052,9 @@ const AccountCreationStep: React.FC<{
           <p className="text-gray-600">
             Set up your secure BillBuddy account to get started
           </p>
-        </motion.div>
+        </div>
 
-        <motion.div
-          className="space-y-4"
-          initial={shouldReduceMotion ? {} : { y: 20, opacity: 0 }}
-          animate={shouldReduceMotion ? {} : { y: 0, opacity: 1 }}
-          transition={{ delay: shouldReduceMotion ? 0 : 0.1 }}
-        >
+        <div className="space-y-4">
           {/* OAuth Options - Prominent placement */}
           <div className="space-y-3">
             <p className="text-center text-sm text-gray-500">
@@ -1242,16 +1188,8 @@ const AccountCreationStep: React.FC<{
                 label: "Verified",
                 color: "bg-purple-100 text-purple-600",
               },
-            ].map((feature, index) => (
-              <motion.div
-                key={feature.label}
-                className="text-center"
-                initial={shouldReduceMotion ? {} : { scale: 0 }}
-                animate={shouldReduceMotion ? {} : { scale: 1 }}
-                transition={{
-                  delay: shouldReduceMotion ? 0 : 0.3 + index * 0.1,
-                }}
-              >
+            ].map((feature) => (
+              <div key={feature.label} className="text-center">
                 <div
                   className={cn(
                     "w-10 h-10 rounded-full mx-auto flex items-center justify-center mb-2",
@@ -1263,17 +1201,13 @@ const AccountCreationStep: React.FC<{
                 <p className="text-xs font-medium text-gray-600">
                   {feature.label}
                 </p>
-              </motion.div>
+              </div>
             ))}
           </div>
 
           {/* Error display */}
           {errors.length > 0 && (
-            <motion.div
-              className="bg-red-50 border border-red-200 rounded-lg p-3"
-              initial={shouldReduceMotion ? {} : { opacity: 0, y: 10 }}
-              animate={shouldReduceMotion ? {} : { opacity: 1, y: 0 }}
-            >
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
               <div className="flex items-center space-x-2">
                 <AlertTriangle className="h-4 w-4 text-red-500" />
                 <div className="text-sm text-red-700">
@@ -1304,7 +1238,7 @@ const AccountCreationStep: React.FC<{
               <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
-        </motion.div>
+        </div>
       </div>
     </div>
   );
@@ -1379,23 +1313,15 @@ const PlaidConnectionStep: React.FC<{
     onNext();
   };
 
-  const motionDuration = shouldReduceMotion
-    ? 0
-    : parseFloat(tokens.animation.duration.normal);
-  const motionProps = shouldReduceMotion
-    ? {}
-    : {
-        initial: { y: 20, opacity: 0 },
-        animate: { y: 0, opacity: 1 },
-        transition: { duration: motionDuration },
-      };
-
   // Show discovery results if we have bills
   if (connectionStatus === "success" && state.discoveredBills.length > 0) {
     return (
-      <div className="flex-1 flex flex-col p-6">
+      <div
+        className="flex-1 flex flex-col p-6"
+        style={{ opacity: 1, visibility: "visible" }}
+      >
         <div className="max-w-2xl mx-auto w-full space-y-6 flex-1 flex flex-col justify-center">
-          <motion.div className="text-center space-y-4" {...motionProps}>
+          <div className="text-center space-y-4">
             <div className="flex items-center justify-center">
               <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center">
                 <CheckCircle className="h-8 w-8 text-emerald-600" />
@@ -1408,23 +1334,13 @@ const PlaidConnectionStep: React.FC<{
               Your bank connection was successful. Here's what we discovered
               automatically:
             </p>
-          </motion.div>
+          </div>
 
-          <motion.div
-            className="space-y-3"
-            initial={shouldReduceMotion ? {} : { y: 20, opacity: 0 }}
-            animate={shouldReduceMotion ? {} : { y: 0, opacity: 1 }}
-            transition={{ delay: shouldReduceMotion ? 0 : 0.2 }}
-          >
-            {state.discoveredBills.map((bill, index) => (
-              <motion.div
+          <div className="space-y-3">
+            {state.discoveredBills.map((bill) => (
+              <div
                 key={bill.id}
                 className="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-between"
-                initial={shouldReduceMotion ? {} : { scale: 0, opacity: 0 }}
-                animate={shouldReduceMotion ? {} : { scale: 1, opacity: 1 }}
-                transition={{
-                  delay: shouldReduceMotion ? 0 : 0.3 + index * 0.1,
-                }}
               >
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
@@ -1452,27 +1368,25 @@ const PlaidConnectionStep: React.FC<{
                   </Badge>
                   <CheckCircle className="h-5 w-5 text-emerald-600" />
                 </div>
-              </motion.div>
+              </div>
             ))}
-          </motion.div>
+          </div>
 
-          <motion.div
-            className="text-center text-sm text-gray-600 bg-emerald-50 border border-emerald-200 rounded-lg p-3"
-            initial={shouldReduceMotion ? {} : { opacity: 0 }}
-            animate={shouldReduceMotion ? {} : { opacity: 1 }}
-            transition={{ delay: shouldReduceMotion ? 0 : 0.5 }}
-          >
+          <div className="text-center text-sm text-gray-600 bg-emerald-50 border border-emerald-200 rounded-lg p-3">
             ✓ We'll continue scanning for more bills as transactions come in
-          </motion.div>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 flex flex-col p-6">
+    <div
+      className="flex-1 flex flex-col p-6"
+      style={{ opacity: 1, visibility: "visible" }}
+    >
       <div className="max-w-2xl mx-auto w-full space-y-6 flex-1 flex flex-col justify-center">
-        <motion.div className="text-center space-y-4" {...motionProps}>
+        <div className="text-center space-y-4">
           <div className="flex items-center justify-center space-x-2">
             <Landmark className="h-8 w-8 text-teal-600" />
             <h2 className="text-2xl font-bold text-navy-900 font-display">
@@ -1486,15 +1400,10 @@ const PlaidConnectionStep: React.FC<{
               ? "Let's connect your bank account to automatically discover your bills"
               : "Connect your bank account for the best bill discovery experience"}
           </p>
-        </motion.div>
+        </div>
 
         {connectionStatus === "idle" && (
-          <motion.div
-            className="space-y-6"
-            initial={shouldReduceMotion ? {} : { y: 20, opacity: 0 }}
-            animate={shouldReduceMotion ? {} : { y: 0, opacity: 1 }}
-            transition={{ delay: shouldReduceMotion ? 0 : 0.1 }}
-          >
+          <div className="space-y-6">
             <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
               <div className="flex items-center space-x-3">
                 <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
@@ -1527,7 +1436,7 @@ const PlaidConnectionStep: React.FC<{
                     label: "Never stored",
                     description: "Credentials",
                   },
-                ].map((feature, index) => (
+                ].map((feature) => (
                   <div key={feature.label} className="space-y-2">
                     <div className="w-10 h-10 bg-green-100 rounded-full mx-auto flex items-center justify-center text-green-600">
                       {feature.icon}
@@ -1568,15 +1477,11 @@ const PlaidConnectionStep: React.FC<{
               Your credentials are never stored and we can only read transaction
               data, not move money
             </div>
-          </motion.div>
+          </div>
         )}
 
         {connectionStatus === "connecting" && (
-          <motion.div
-            className="text-center space-y-6"
-            initial={shouldReduceMotion ? {} : { opacity: 0 }}
-            animate={shouldReduceMotion ? {} : { opacity: 1 }}
-          >
+          <div className="text-center space-y-6">
             <div className="w-16 h-16 bg-emerald-100 rounded-full mx-auto flex items-center justify-center">
               <Loader2 className="h-8 w-8 text-emerald-600 animate-spin" />
             </div>
@@ -1596,7 +1501,7 @@ const PlaidConnectionStep: React.FC<{
                 ⟳ Scanning transactions for bills...
               </p>
             </div>
-          </motion.div>
+          </div>
         )}
 
         {/* Navigation buttons for non-connecting states */}
@@ -1677,21 +1582,13 @@ const HouseholdSetupStep: React.FC<{
     onNext();
   };
 
-  const motionDuration = shouldReduceMotion
-    ? 0
-    : parseFloat(tokens.animation.duration.normal);
-  const motionProps = shouldReduceMotion
-    ? {}
-    : {
-        initial: { y: 20, opacity: 0 },
-        animate: { y: 0, opacity: 1 },
-        transition: { duration: motionDuration },
-      };
-
   return (
-    <div className="flex-1 flex flex-col p-6">
+    <div
+      className="flex-1 flex flex-col p-6"
+      style={{ opacity: 1, visibility: "visible" }}
+    >
       <div className="max-w-2xl mx-auto w-full space-y-6 flex-1 flex flex-col justify-center">
-        <motion.div className="text-center space-y-4" {...motionProps}>
+        <div className="text-center space-y-4">
           <div className="flex items-center justify-center space-x-2">
             <Building className="h-8 w-8 text-teal-600" />
             <h2 className="text-2xl font-bold text-navy-900 font-display">
@@ -1702,16 +1599,11 @@ const HouseholdSetupStep: React.FC<{
             This helps us understand what types of bills you might have and how
             to organize them
           </p>
-        </motion.div>
+        </div>
 
-        <motion.div
-          className="grid grid-cols-1 md:grid-cols-2 gap-4"
-          initial={shouldReduceMotion ? {} : { y: 20, opacity: 0 }}
-          animate={shouldReduceMotion ? {} : { y: 0, opacity: 1 }}
-          transition={{ delay: shouldReduceMotion ? 0 : 0.1 }}
-        >
-          {householdTypes.map((type, index) => (
-            <motion.button
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {householdTypes.map((type) => (
+            <button
               key={type.id}
               onClick={() => handleTypeSelect(type.id)}
               className={cn(
@@ -1720,11 +1612,6 @@ const HouseholdSetupStep: React.FC<{
                   ? "border-teal-300 bg-teal-50"
                   : "border-gray-200 hover:border-gray-300 bg-white",
               )}
-              initial={shouldReduceMotion ? {} : { scale: 0, opacity: 0 }}
-              animate={shouldReduceMotion ? {} : { scale: 1, opacity: 1 }}
-              transition={{ delay: shouldReduceMotion ? 0 : 0.2 + index * 0.1 }}
-              whileHover={shouldReduceMotion ? {} : { scale: 1.02 }}
-              whileTap={shouldReduceMotion ? {} : { scale: 0.98 }}
             >
               <div className="flex items-start space-x-4">
                 <div
@@ -1745,17 +1632,13 @@ const HouseholdSetupStep: React.FC<{
                   <CheckCircle className="h-6 w-6 text-teal-600" />
                 )}
               </div>
-            </motion.button>
+            </button>
           ))}
-        </motion.div>
+        </div>
 
         {/* Location detection */}
         {state.householdType && (
-          <motion.div
-            className="bg-white border border-gray-200 rounded-xl p-6 space-y-4"
-            initial={shouldReduceMotion ? {} : { opacity: 0, y: 20 }}
-            animate={shouldReduceMotion ? {} : { opacity: 1, y: 0 }}
-          >
+          <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
             <div className="flex items-center space-x-2">
               <MapPin className="h-5 w-5 text-teal-600" />
               <h3 className="font-semibold text-gray-900">Location</h3>
@@ -1780,7 +1663,7 @@ const HouseholdSetupStep: React.FC<{
                 <span>Detecting your location...</span>
               </div>
             )}
-          </motion.div>
+          </div>
         )}
 
         {/* Navigation buttons */}
@@ -1826,21 +1709,13 @@ const PersonalizationStep: React.FC<{
     onNext();
   };
 
-  const motionDuration = shouldReduceMotion
-    ? 0
-    : parseFloat(tokens.animation.duration.normal);
-  const motionProps = shouldReduceMotion
-    ? {}
-    : {
-        initial: { y: 20, opacity: 0 },
-        animate: { y: 0, opacity: 1 },
-        transition: { duration: motionDuration },
-      };
-
   return (
-    <div className="flex-1 flex flex-col p-6">
+    <div
+      className="flex-1 flex flex-col p-6"
+      style={{ opacity: 1, visibility: "visible" }}
+    >
       <div className="max-w-md mx-auto w-full space-y-6 flex-1 flex flex-col justify-center">
-        <motion.div className="text-center space-y-4" {...motionProps}>
+        <div className="text-center space-y-4">
           <div className="flex items-center justify-center space-x-2">
             <Sparkles className="h-8 w-8 text-teal-600" />
             <h2 className="text-2xl font-bold text-navy-900 font-display">
@@ -1850,14 +1725,9 @@ const PersonalizationStep: React.FC<{
           <p className="text-gray-600">
             Help us provide better insights and recommendations tailored to you
           </p>
-        </motion.div>
+        </div>
 
-        <motion.div
-          className="space-y-6"
-          initial={shouldReduceMotion ? {} : { y: 20, opacity: 0 }}
-          animate={shouldReduceMotion ? {} : { y: 0, opacity: 1 }}
-          transition={{ delay: shouldReduceMotion ? 0 : 0.1 }}
-        >
+        <div className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Monthly Income (Optional)
@@ -1907,7 +1777,7 @@ const PersonalizationStep: React.FC<{
                   description: "Different for each bill",
                 },
               ].map((option) => (
-                <motion.button
+                <button
                   key={option.value}
                   onClick={() =>
                     updateState({ billFrequency: option.value as any })
@@ -1918,8 +1788,6 @@ const PersonalizationStep: React.FC<{
                       ? "border-teal-300 bg-teal-50"
                       : "border-gray-200 hover:border-gray-300 bg-white",
                   )}
-                  whileHover={shouldReduceMotion ? {} : { scale: 1.01 }}
-                  whileTap={shouldReduceMotion ? {} : { scale: 0.99 }}
                 >
                   <div className="flex items-center justify-between">
                     <div>
@@ -1934,7 +1802,7 @@ const PersonalizationStep: React.FC<{
                       <CheckCircle className="h-5 w-5 text-teal-600" />
                     )}
                   </div>
-                </motion.button>
+                </button>
               ))}
             </div>
           </div>
@@ -1962,15 +1830,10 @@ const PersonalizationStep: React.FC<{
                   icon: <TrendingUp className="h-4 w-4" />,
                   label: "Track spending trends",
                 },
-              ].map((goal, index) => (
-                <motion.div
+              ].map((goal) => (
+                <div
                   key={goal.label}
                   className="flex items-center space-x-3 p-3 bg-white border border-gray-200 rounded-lg"
-                  initial={shouldReduceMotion ? {} : { opacity: 0, x: -20 }}
-                  animate={shouldReduceMotion ? {} : { opacity: 1, x: 0 }}
-                  transition={{
-                    delay: shouldReduceMotion ? 0 : 0.3 + index * 0.1,
-                  }}
                 >
                   <Checkbox id={goal.label} />
                   <div className="flex items-center space-x-2">
@@ -1984,11 +1847,11 @@ const PersonalizationStep: React.FC<{
                       {goal.label}
                     </label>
                   </div>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* Navigation buttons */}
         <div className="flex items-center justify-between">
@@ -2021,21 +1884,19 @@ const CompletionStep: React.FC<{
 }> = ({ onComplete, state }) => {
   const shouldReduceMotion = useReducedMotion();
 
-  const motionDuration = shouldReduceMotion
-    ? 0
-    : parseFloat(tokens.animation.duration.normal);
-  const motionProps = shouldReduceMotion
-    ? {}
-    : {
-        initial: { y: 20, opacity: 0 },
-        animate: { y: 0, opacity: 1 },
-        transition: { duration: motionDuration },
-      };
-
   return (
-    <div className="flex-1 flex flex-col p-6">
-      <div className="max-w-2xl mx-auto w-full space-y-8 flex-1 flex flex-col justify-center">
-        <motion.div className="text-center space-y-6" {...motionProps}>
+    <div
+      className="flex-1 flex flex-col p-6"
+      style={{ opacity: 1, visibility: "visible" }}
+    >
+      <div
+        className="max-w-2xl mx-auto w-full space-y-8 flex-1 flex flex-col justify-center"
+        style={{ opacity: 1, visibility: "visible" }}
+      >
+        <div
+          className="text-center space-y-6"
+          style={{ opacity: 1, visibility: "visible" }}
+        >
           <div className="flex items-center justify-center">
             <div
               className="w-20 h-20 rounded-full bg-gradient-to-r from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg"
@@ -2060,7 +1921,7 @@ const CompletionStep: React.FC<{
           {/* Summary of what was set up */}
           <div
             className="bg-white border border-gray-200 rounded-xl p-6 text-left space-y-4"
-            style={{ opacity: 1, visibility: 'visible' }}
+            style={{ opacity: 1, visibility: "visible" }}
           >
             <h3 className="font-semibold text-gray-900 text-center mb-4">
               Here's what we've set up for you:
@@ -2119,22 +1980,22 @@ const CompletionStep: React.FC<{
                 </div>
               </div>
             </div>
-          </motion.div>
+          </div>
 
           {/* Next steps */}
           {state.discoveredBills.length > 0 && (
             <div
               className="bg-teal-50 border border-teal-200 rounded-lg p-4"
-              style={{ opacity: 1, visibility: 'visible' }}
+              style={{ opacity: 1, visibility: "visible" }}
             >
               <p className="text-sm text-teal-800">
                 💡 <strong>Pro tip:</strong> We'll continue scanning your
                 transactions to find more bills automatically. You can review
                 and confirm them in your dashboard.
               </p>
-            </motion.div>
+            </div>
           )}
-        </motion.div>
+        </div>
 
         <div className="grid grid-cols-3 gap-4 py-4">
           {[
@@ -2153,11 +2014,11 @@ const CompletionStep: React.FC<{
               label: "Smart",
               color: "bg-purple-100 text-purple-600",
             },
-          ].map((feature, index) => (
+          ].map((feature) => (
             <div
               key={feature.label}
               className="text-center"
-              style={{ opacity: 1, visibility: 'visible' }}
+              style={{ opacity: 1, visibility: "visible" }}
             >
               <div
                 className={cn(
@@ -2170,7 +2031,7 @@ const CompletionStep: React.FC<{
               <p className="text-xs font-medium text-gray-600">
                 {feature.label}
               </p>
-            </motion.div>
+            </div>
           ))}
         </div>
 
