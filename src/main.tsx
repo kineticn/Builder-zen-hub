@@ -1,3 +1,4 @@
+import React from "react";
 import { createRoot } from "react-dom/client";
 import { Partytown } from "@builder.io/partytown/react";
 import { partytownConfig, consentManager } from "./lib/partytown-config";
@@ -55,7 +56,7 @@ root.render(
                 anonymize_ip: true,
                 allow_ad_personalization_signals: false
               });
-              
+
               // Track key BillBuddy events
               gtag('event', 'app_load', {
                 event_category: 'engagement',
@@ -78,10 +79,10 @@ root.render(
               t.src=v;s=b.getElementsByTagName(e)[0];
               s.parentNode.insertBefore(t,s)}(window, document,'script',
               'https://connect.facebook.net/en_US/fbevents.js');
-              
+
               fbq('init', 'FB_PIXEL_ID');
               fbq('track', 'PageView');
-              
+
               // Custom BillBuddy events
               fbq('trackCustom', 'FinTechAppLoad', {
                 app_name: 'BillBuddy',
@@ -99,14 +100,14 @@ root.render(
               (function() {
                 // Enhanced Builder tracking setup
                 window.builder = window.builder || {};
-                
+
                 // Custom tracking function with error handling
                 window.builder.track = function(event, data) {
                   if (!window.builder.canTrack) {
                     console.log('Builder tracking disabled - user has not consented');
                     return;
                   }
-                  
+
                   try {
                     const trackingData = {
                       event: event,
@@ -122,7 +123,7 @@ root.render(
                         environment: '${process.env.NODE_ENV || "production"}'
                       }
                     };
-                    
+
                     // Send to Builder.io
                     fetch('https://builder.io/api/v1/track', {
                       method: 'POST',
@@ -143,21 +144,21 @@ root.render(
                     console.error('Builder tracking error:', error);
                   }
                 };
-                
+
                 // Initialize session if not exists
                 if (!sessionStorage.getItem('billbuddy_session_id')) {
-                  sessionStorage.setItem('billbuddy_session_id', 
+                  sessionStorage.setItem('billbuddy_session_id',
                     'sess_' + Math.random().toString(36).substr(2, 9) + Date.now()
                   );
                 }
-                
+
                 // Track initial page load
                 window.builder.track('page_view', {
                   page: window.location.pathname,
                   title: document.title,
                   referrer: document.referrer
                 });
-                
+
                 // Load Builder SDK if needed
                 if (typeof window !== 'undefined' && !window.customElements.get('builder-component')) {
                   const script = document.createElement('script');
@@ -208,13 +209,13 @@ root.render(
                     return transaction;
                   }
                 });
-                
+
                 // Set user context (without PII)
                 Sentry.setUser({
                   id: sessionStorage.getItem('billbuddy_session_id'),
                   // Don't include email or other PII
                 });
-                
+
                 // Set app context
                 Sentry.setTag('app.name', 'BillBuddy');
                 Sentry.setTag('app.version', '1.0.0');
