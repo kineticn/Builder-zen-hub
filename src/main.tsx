@@ -2,6 +2,7 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import { Partytown } from "@builder.io/partytown/react";
 import { partytownConfig, consentManager } from "./lib/partytown-config";
+import ErrorBoundary from "./components/ErrorBoundary";
 import App from "./App.tsx";
 import "./index.css";
 
@@ -19,7 +20,20 @@ if (typeof window !== "undefined") {
 const root = createRoot(document.getElementById("root")!);
 
 root.render(
-  <>
+  <ErrorBoundary
+    onError={(error, errorInfo) => {
+      // Log errors but don't break the app for Partytown issues
+      if (
+        error.message.includes("cross-origin") ||
+        error.message.includes("dispatchEvent") ||
+        error.message.includes("partytown")
+      ) {
+        console.warn("Partytown error handled gracefully:", error.message);
+        return;
+      }
+      console.error("Application error:", error, errorInfo);
+    }}
+  >
     {/* Partytown for offloading 3rd-party scripts */}
     <Partytown {...partytownConfig} />
 
@@ -34,15 +48,23 @@ root.render(
           type="text/partytown"
           src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"
           async
+          onError={(e) => console.warn("GA script load error:", e)}
         />
         <script
           type="text/partytown"
           dangerouslySetInnerHTML={{
             __html: `
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-              gtag('config', 'GA_MEASUREMENT_ID', {
+              try {
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){
+                  try {
+                    dataLayer.push(arguments);
+                  } catch (e) {
+                    console.warn('gtag error:', e.message);
+                  }
+                }
+                gtag('js', new Date());
+                gtag('config', 'GA_MEASUREMENT_ID', {
                 page_title: 'BillBuddy FinTech App',
                 page_location: window.location.href,
                 send_page_view: true,
@@ -57,11 +79,14 @@ root.render(
                 allow_ad_personalization_signals: false
               });
 
-              // Track key BillBuddy events
-              gtag('event', 'app_load', {
-                event_category: 'engagement',
-                event_label: 'app_startup'
-              });
+                // Track key BillBuddy events
+                gtag('event', 'app_load', {
+                  event_category: 'engagement',
+                  event_label: 'app_startup'
+                });
+              } catch (error) {
+                console.warn('Google Analytics initialization error:', error.message);
+              }
             `,
           }}
         />
@@ -71,23 +96,32 @@ root.render(
           type="text/partytown"
           dangerouslySetInnerHTML={{
             __html: `
-              !function(f,b,e,v,n,t,s)
-              {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-              n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-              if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-              n.queue=[];t=b.createElement(e);t.async=!0;
-              t.src=v;s=b.getElementsByTagName(e)[0];
-              s.parentNode.insertBefore(t,s)}(window, document,'script',
-              'https://connect.facebook.net/en_US/fbevents.js');
+              try {
+                !function(f,b,e,v,n,t,s)
+                {if(f.fbq)return;n=f.fbq=function(){
+                  try {
+                    n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments);
+                  } catch (e) {
+                    console.warn('fbq error:', e.message);
+                  }
+                };
+                if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+                n.queue=[];t=b.createElement(e);t.async=!0;
+                t.src=v;s=b.getElementsByTagName(e)[0];
+                s.parentNode.insertBefore(t,s)}(window, document,'script',
+                'https://connect.facebook.net/en_US/fbevents.js');
 
-              fbq('init', 'FB_PIXEL_ID');
-              fbq('track', 'PageView');
+                fbq('init', 'FB_PIXEL_ID');
+                fbq('track', 'PageView');
 
-              // Custom BillBuddy events
-              fbq('trackCustom', 'FinTechAppLoad', {
-                app_name: 'BillBuddy',
-                category: 'finance'
-              });
+                // Custom BillBuddy events
+                fbq('trackCustom', 'FinTechAppLoad', {
+                  app_name: 'BillBuddy',
+                  category: 'finance'
+                });
+              } catch (error) {
+                console.warn('Facebook Pixel initialization error:', error.message);
+              }
             `,
           }}
         />
@@ -101,7 +135,7 @@ root.render(
                 // Enhanced Builder tracking setup
                 window.builder = window.builder || {};
 
-                // Custom tracking function with error handling
+                // Custom tracking function with enhanced error handling
                 window.builder.track = function(event, data) {
                   if (!window.builder.canTrack) {
                     console.log('Builder tracking disabled - user has not consented');
@@ -228,7 +262,7 @@ root.render(
 
     {/* Show consent banner if no consent given */}
     <ConsentBanner />
-  </>,
+  </ErrorBoundary>,
 );
 
 // Consent Banner Component

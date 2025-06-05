@@ -28,6 +28,11 @@ export const partytownConfig: PartytownConfig = {
 
     // User consent
     "userHasConsented",
+
+    // Window and document events
+    "dispatchEvent",
+    "addEventListener",
+    "removeEventListener",
   ],
 
   // Resolve URLs for 3rd-party scripts
@@ -44,31 +49,53 @@ export const partytownConfig: PartytownConfig = {
       "browser.sentry-cdn.com",
     ];
 
-    // Allow specific domains to load directly
-    if (allowedDomains.some((domain) => url.hostname.includes(domain))) {
+    try {
+      // Allow specific domains to load directly without proxy
+      if (allowedDomains.some((domain) => url.hostname.includes(domain))) {
+        return url;
+      }
+
+      // For same-origin requests, return as-is
+      if (url.origin === location.origin) {
+        return url;
+      }
+
+      // Return original URL to avoid proxy issues with cross-origin
+      return url;
+    } catch (error) {
+      console.warn("Partytown resolveUrl error:", error);
       return url;
     }
-
-    // Proxy other scripts through Partytown
-    const proxyUrl = new URL(`/~partytown/${url.href}`, location.origin);
-
-    // Add headers for CORS if needed
-    if (type === "script") {
-      proxyUrl.searchParams.set("cors", "true");
-    }
-
-    return proxyUrl;
   },
 
   // Custom configuration for specific services
   lib: "/~partytown/",
 
-  // Allowed domains for CORS requests
-  allowedDomains: [
-    "https://www.googletagmanager.com",
-    "https://connect.facebook.net",
-    "https://cdn.builder.io",
-  ],
+  // Sandbox configuration to prevent cross-origin issues
+  sandbox: {
+    // Allow scripts to run but restrict dangerous operations
+    "allow-scripts": true,
+    "allow-same-origin": false, // Prevent same-origin access that causes issues
+  },
+
+  // Enhanced error handling
+  onError: (error) => {
+    // Log Partytown errors but don't break the app
+    console.warn("Partytown error (non-critical):", error.message);
+
+    // Don't throw for cross-origin frame access errors
+    if (
+      error.message.includes("cross-origin frame") ||
+      error.message.includes("dispatchEvent")
+    ) {
+      return; // Silently handle these specific errors
+    }
+
+    // Only log other errors in development
+    if (process.env.NODE_ENV === "development") {
+      console.error("Partytown error:", error);
+    }
+  },
 };
 
 // Analytics consent management
@@ -189,8 +216,8 @@ export class ConsentManager {
     banner.innerHTML = `
       <div style="flex: 1; min-width: 300px;">
         <p style="margin: 0; font-size: 14px; line-height: 1.4;">
-          We use cookies and similar technologies to improve your experience, 
-          analyze usage, and provide personalized content. 
+          We use cookies and similar technologies to improve your experience,
+          analyze usage, and provide personalized content.
           <a href="/privacy-policy" style="color: #00C2B2; text-decoration: underline;">
             Privacy Policy
           </a>
