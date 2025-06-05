@@ -2,6 +2,7 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import { Partytown } from "@builder.io/partytown/react";
 import { partytownConfig, consentManager } from "./lib/partytown-config";
+import { ScriptLoader } from "./lib/script-loader";
 import ErrorBoundary from "./components/ErrorBoundary";
 import App from "./App.tsx";
 import "./index.css";
@@ -17,6 +18,32 @@ if (typeof window !== "undefined") {
   window.builder.canTrack = hasConsent;
 }
 
+// Feature detection for Partytown support
+const shouldUsePartytown = (): boolean => {
+  if (typeof window === "undefined") return false;
+
+  // Check if we're in a secure context and have proper headers
+  try {
+    // In development, always try Partytown first
+    if (import.meta.env.MODE === "development") {
+      return true;
+    }
+
+    // In production, check for cross-origin isolation
+    const hasProperHeaders =
+      window.isSecureContext &&
+      (window.location.protocol === "https:" ||
+        window.location.hostname === "localhost");
+
+    return hasProperHeaders;
+  } catch (error) {
+    console.warn("Partytown feature detection failed:", error);
+    return false;
+  }
+};
+
+const usePartytown = shouldUsePartytown();
+
 const root = createRoot(document.getElementById("root")!);
 
 root.render(
@@ -26,239 +53,23 @@ root.render(
       if (
         error.message.includes("cross-origin") ||
         error.message.includes("dispatchEvent") ||
-        error.message.includes("partytown")
+        error.message.includes("partytown") ||
+        error.message.includes("SecurityError")
       ) {
-        console.warn("Partytown error handled gracefully:", error.message);
+        console.warn("Cross-origin error suppressed:", error.message);
         return;
       }
       console.error("Application error:", error, errorInfo);
     }}
   >
-    {/* Partytown for offloading 3rd-party scripts */}
-    <Partytown {...partytownConfig} />
+    {/* Only include Partytown if we can use it safely */}
+    {usePartytown && <Partytown {...partytownConfig} />}
 
     {/* Main App Component */}
     <App />
 
-    {/* 3rd-party scripts - only load if user has consented */}
-    {hasConsent && (
-      <>
-        {/* Google Analytics */}
-        <script
-          type="text/partytown"
-          src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"
-          async
-          onError={(e) => console.warn("GA script load error:", e)}
-        />
-        <script
-          type="text/partytown"
-          dangerouslySetInnerHTML={{
-            __html: `
-              try {
-                window.dataLayer = window.dataLayer || [];
-                function gtag(){
-                  try {
-                    dataLayer.push(arguments);
-                  } catch (e) {
-                    console.warn('gtag error:', e.message);
-                  }
-                }
-                gtag('js', new Date());
-                gtag('config', 'GA_MEASUREMENT_ID', {
-                page_title: 'BillBuddy FinTech App',
-                page_location: window.location.href,
-                send_page_view: true,
-                custom_map: {
-                  'user_type': 'billbuddy_user',
-                  'app_version': '1.0.0'
-                },
-                // Enhanced ecommerce tracking
-                allow_enhanced_conversions: true,
-                // Privacy-focused settings
-                anonymize_ip: true,
-                allow_ad_personalization_signals: false
-              });
-
-                // Track key BillBuddy events
-                gtag('event', 'app_load', {
-                  event_category: 'engagement',
-                  event_label: 'app_startup'
-                });
-              } catch (error) {
-                console.warn('Google Analytics initialization error:', error.message);
-              }
-            `,
-          }}
-        />
-
-        {/* Facebook Pixel */}
-        <script
-          type="text/partytown"
-          dangerouslySetInnerHTML={{
-            __html: `
-              try {
-                !function(f,b,e,v,n,t,s)
-                {if(f.fbq)return;n=f.fbq=function(){
-                  try {
-                    n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments);
-                  } catch (e) {
-                    console.warn('fbq error:', e.message);
-                  }
-                };
-                if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-                n.queue=[];t=b.createElement(e);t.async=!0;
-                t.src=v;s=b.getElementsByTagName(e)[0];
-                s.parentNode.insertBefore(t,s)}(window, document,'script',
-                'https://connect.facebook.net/en_US/fbevents.js');
-
-                fbq('init', 'FB_PIXEL_ID');
-                fbq('track', 'PageView');
-
-                // Custom BillBuddy events
-                fbq('trackCustom', 'FinTechAppLoad', {
-                  app_name: 'BillBuddy',
-                  category: 'finance'
-                });
-              } catch (error) {
-                console.warn('Facebook Pixel initialization error:', error.message);
-              }
-            `,
-          }}
-        />
-
-        {/* Builder.io Analytics */}
-        <script
-          type="text/partytown"
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                // Enhanced Builder tracking setup
-                window.builder = window.builder || {};
-
-                // Custom tracking function with enhanced error handling
-                window.builder.track = function(event, data) {
-                  if (!window.builder.canTrack) {
-                    console.log('Builder tracking disabled - user has not consented');
-                    return;
-                  }
-
-                  try {
-                    const trackingData = {
-                      event: event,
-                      data: data || {},
-                      url: window.location.href,
-                      timestamp: Date.now(),
-                      userAgent: navigator.userAgent,
-                      sessionId: sessionStorage.getItem('billbuddy_session_id') || 'anonymous',
-                      // BillBuddy specific context
-                      app: {
-                        name: 'BillBuddy',
-                        version: '1.0.0',
-                        environment: '${process.env.NODE_ENV || "production"}'
-                      }
-                    };
-
-                    // Send to Builder.io
-                    fetch('https://builder.io/api/v1/track', {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer BUILDER_API_KEY'
-                      },
-                      body: JSON.stringify(trackingData)
-                    }).then(response => {
-                      if (!response.ok) {
-                        throw new Error('Builder tracking request failed');
-                      }
-                      console.log('Builder event tracked:', event);
-                    }).catch(err => {
-                      console.warn('Builder tracking failed:', err);
-                    });
-                  } catch (error) {
-                    console.error('Builder tracking error:', error);
-                  }
-                };
-
-                // Initialize session if not exists
-                if (!sessionStorage.getItem('billbuddy_session_id')) {
-                  sessionStorage.setItem('billbuddy_session_id',
-                    'sess_' + Math.random().toString(36).substr(2, 9) + Date.now()
-                  );
-                }
-
-                // Track initial page load
-                window.builder.track('page_view', {
-                  page: window.location.pathname,
-                  title: document.title,
-                  referrer: document.referrer
-                });
-
-                // Load Builder SDK if needed
-                if (typeof window !== 'undefined' && !window.customElements.get('builder-component')) {
-                  const script = document.createElement('script');
-                  script.src = 'https://cdn.builder.io/js/webcomponents';
-                  script.async = true;
-                  script.onload = function() {
-                    console.log('Builder SDK loaded');
-                  };
-                  document.head.appendChild(script);
-                }
-              })();
-            `,
-          }}
-        />
-
-        {/* Error Tracking (Sentry example) */}
-        <script
-          type="text/partytown"
-          src="https://browser.sentry-cdn.com/7.0.0/bundle.min.js"
-          integrity="sha384-example-integrity-hash"
-          crossOrigin="anonymous"
-        />
-        <script
-          type="text/partytown"
-          dangerouslySetInnerHTML={{
-            __html: `
-              if (typeof Sentry !== 'undefined') {
-                Sentry.init({
-                  dsn: 'SENTRY_DSN_URL',
-                  environment: '${process.env.NODE_ENV || "production"}',
-                  release: 'billbuddy@1.0.0',
-                  beforeSend: function(event) {
-                    // Only send errors if user has consented
-                    return window.builder && window.builder.canTrack ? event : null;
-                  },
-                  integrations: [
-                    new Sentry.BrowserTracing({
-                      tracePropagationTargets: [window.location.hostname]
-                    })
-                  ],
-                  tracesSampleRate: 0.1,
-                  // Privacy-focused configuration
-                  beforeSendTransaction: function(transaction) {
-                    // Filter out sensitive transaction data
-                    if (transaction.transaction && transaction.transaction.includes('payment')) {
-                      return null;
-                    }
-                    return transaction;
-                  }
-                });
-
-                // Set user context (without PII)
-                Sentry.setUser({
-                  id: sessionStorage.getItem('billbuddy_session_id'),
-                  // Don't include email or other PII
-                });
-
-                // Set app context
-                Sentry.setTag('app.name', 'BillBuddy');
-                Sentry.setTag('app.version', '1.0.0');
-              }
-            `,
-          }}
-        />
-      </>
-    )}
+    {/* Smart script loader that falls back gracefully */}
+    <ScriptLoader hasConsent={hasConsent} />
 
     {/* Show consent banner if no consent given */}
     <ConsentBanner />

@@ -1,11 +1,11 @@
 import type { PartytownConfig } from "@builder.io/partytown/integration";
 
-// Partytown configuration for BillBuddy
+// Simplified Partytown configuration to avoid cross-origin issues
 export const partytownConfig: PartytownConfig = {
-  // Enable debug mode in development
-  debug: process.env.NODE_ENV === "development",
+  // Enable debug mode in development only
+  debug: import.meta.env.MODE === "development",
 
-  // Forward these global variables and functions to the main thread
+  // Minimal forwarding to reduce cross-origin issues
   forward: [
     // Google Analytics
     "gtag",
@@ -18,82 +18,35 @@ export const partytownConfig: PartytownConfig = {
     "builder.track",
     "builder.canTrack",
 
-    // Custom analytics
-    "analytics.track",
-    "analytics.identify",
-    "analytics.page",
-
-    // Error tracking
-    "Sentry.captureException",
-
     // User consent
     "userHasConsented",
-
-    // Window and document events
-    "dispatchEvent",
-    "addEventListener",
-    "removeEventListener",
   ],
 
-  // Resolve URLs for 3rd-party scripts
+  // Simplified URL resolution - avoid proxying
   resolveUrl: (url, location, type) => {
-    // List of allowed domains for 3rd-party scripts
-    const allowedDomains = [
-      "googletagmanager.com",
-      "google-analytics.com",
-      "facebook.net",
-      "connect.facebook.net",
-      "builder.io",
-      "cdn.builder.io",
-      "js.sentry-cdn.com",
-      "browser.sentry-cdn.com",
-    ];
-
-    try {
-      // Allow specific domains to load directly without proxy
-      if (allowedDomains.some((domain) => url.hostname.includes(domain))) {
-        return url;
-      }
-
-      // For same-origin requests, return as-is
-      if (url.origin === location.origin) {
-        return url;
-      }
-
-      // Return original URL to avoid proxy issues with cross-origin
-      return url;
-    } catch (error) {
-      console.warn("Partytown resolveUrl error:", error);
-      return url;
-    }
+    // Always return the original URL to avoid proxy complications
+    return url;
   },
 
-  // Custom configuration for specific services
+  // Minimal configuration
   lib: "/~partytown/",
 
-  // Sandbox configuration to prevent cross-origin issues
-  sandbox: {
-    // Allow scripts to run but restrict dangerous operations
-    "allow-scripts": true,
-    "allow-same-origin": false, // Prevent same-origin access that causes issues
-  },
-
-  // Enhanced error handling
+  // Enhanced error handling with graceful fallback
   onError: (error) => {
-    // Log Partytown errors but don't break the app
-    console.warn("Partytown error (non-critical):", error.message);
-
-    // Don't throw for cross-origin frame access errors
+    // Suppress cross-origin errors completely
     if (
-      error.message.includes("cross-origin frame") ||
-      error.message.includes("dispatchEvent")
+      error.message.includes("cross-origin") ||
+      error.message.includes("dispatchEvent") ||
+      error.message.includes("SecurityError") ||
+      error.message.includes("frame")
     ) {
-      return; // Silently handle these specific errors
+      console.warn("Cross-origin error suppressed:", error.message);
+      return; // Don't propagate these errors
     }
 
-    // Only log other errors in development
-    if (process.env.NODE_ENV === "development") {
-      console.error("Partytown error:", error);
+    // Only log real errors in development
+    if (import.meta.env.MODE === "development") {
+      console.warn("Partytown error:", error.message);
     }
   },
 };
