@@ -508,28 +508,28 @@ const Dashboard: React.FC = () => {
         }}
       >
         <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center">
-              <Sparkles className="h-6 w-6" />
+          <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/10 rounded-full flex items-center justify-center flex-shrink-0">
+              <Sparkles className="h-5 w-5 sm:h-6 sm:w-6" />
             </div>
-            <div>
-              <p className="text-sm opacity-80">Welcome back,</p>
-              <h1 className="text-xl font-bold">Sarah</h1>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs sm:text-sm opacity-80">Welcome back,</p>
+              <h1 className="text-lg sm:text-xl font-bold truncate">Sarah</h1>
             </div>
           </div>
 
           {/* Household Switcher */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="text-white hover:bg-white/10 space-x-2"
-              >
-                {selectedHousehold.icon}
-                <span className="hidden sm:inline">
-                  {selectedHousehold.name}
-                </span>
-                <ChevronDown className="h-4 w-4" />
+              <Button variant="ghost" className="text-white hover:bg-white/10 space-x-2 min-h-[44px] px-3 py-2">
+                <div className="flex items-center space-x-2">
+                  {selectedHousehold.icon}
+                  <span className="hidden sm:inline font-medium">{selectedHousehold.name}</span>
+                  <span className="sm:hidden font-medium text-xs">
+                    {selectedHousehold.name.split(' ')[0]}
+                  </span>
+                  <ChevronDown className="h-4 w-4 flex-shrink-0" />
+                </div>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
@@ -560,24 +560,20 @@ const Dashboard: React.FC = () => {
 
         {/* Quick Stats */}
         <div
-          className="bg-white/10 backdrop-blur-sm rounded-2xl p-4"
+          className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 sm:p-4"
           style={{
             background: tokens.colors.opacity.glass,
-            backdropFilter: "blur(12px)",
+            backdropFilter: 'blur(12px)',
           }}
         >
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm opacity-80">Monthly Outflow</p>
-              <p className="text-2xl font-bold">
-                {formatCurrency(selectedHousehold.totalMonthlyOutflow)}
-              </p>
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
+            <div className="min-w-0">
+              <p className="text-xs sm:text-sm opacity-80">Monthly Outflow</p>
+              <p className="text-lg sm:text-2xl font-bold truncate">{formatCurrency(selectedHousehold.totalMonthlyOutflow)}</p>
             </div>
-            <div>
-              <p className="text-sm opacity-80">Upcoming Bills</p>
-              <p className="text-2xl font-bold">
-                {selectedHousehold.upcomingJointBills}
-              </p>
+            <div className="min-w-0">
+              <p className="text-xs sm:text-sm opacity-80">Upcoming Bills</p>
+              <p className="text-lg sm:text-2xl font-bold">{selectedHousehold.upcomingJointBills}</p>
             </div>
           </div>
         </div>
@@ -585,38 +581,28 @@ const Dashboard: React.FC = () => {
 
       {/* Tabbed Navigation */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
-        <div className="px-6">
-          <Tabs
-            value={currentView}
-            onValueChange={(value) => setCurrentView(value as any)}
-            className="w-full"
-          >
-            <TabsList className="grid w-full grid-cols-3 h-12">
-              <TabsTrigger value="list" className="flex items-center space-x-2">
-                <List className="h-4 w-4" />
-                <span className="hidden sm:inline">List</span>
+        <div className="px-3 sm:px-6">
+          <Tabs value={currentView} onValueChange={(value) => setCurrentView(value as any)} className="w-full">
+            <TabsList className="grid w-full grid-cols-3 h-12 sm:h-14">
+              <TabsTrigger value="list" className="flex items-center justify-center space-x-1 sm:space-x-2 min-h-[44px]">
+                <List className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="text-xs sm:text-sm">List</span>
               </TabsTrigger>
-              <TabsTrigger
-                value="calendar"
-                className="flex items-center space-x-2"
-              >
-                <CalendarDays className="h-4 w-4" />
-                <span className="hidden sm:inline">Calendar</span>
+              <TabsTrigger value="calendar" className="flex items-center justify-center space-x-1 sm:space-x-2 min-h-[44px]">
+                <CalendarDays className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="text-xs sm:text-sm">Calendar</span>
               </TabsTrigger>
-              <TabsTrigger
-                value="cashflow"
-                className="flex items-center space-x-2"
-              >
-                <BarChart3 className="h-4 w-4" />
-                <span className="hidden sm:inline">Cash Flow</span>
+              <TabsTrigger value="cashflow" className="flex items-center justify-center space-x-1 sm:space-x-2 min-h-[44px]">
+                <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="text-xs sm:text-sm hidden xs:inline">Cash Flow</span>
+                <span className="text-xs sm:text-sm xs:hidden">Flow</span>
               </TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
       </div>
-
       {/* Main Content */}
-      <div className="p-6 pb-24" style={{ opacity: 1, visibility: "visible" }}>
+      <div className="p-3 sm:p-6 pb-24" style={{ opacity: 1, visibility: 'visible' }}>
         {/* List View */}
         {currentView === "list" && (
           <div className="space-y-6">
@@ -822,31 +808,32 @@ const Dashboard: React.FC = () => {
               </motion.div>
             )}
 
-            {/* Bills List */}
-            <div className="space-y-4">
-              {filteredBills.length === 0 ? (
-                <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <FileText className="h-8 w-8 text-gray-400" />
-                  </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    No bills yet
-                  </h3>
-                  <p className="text-gray-600 mb-6">
-                    Add your first bill or connect your bank account to get
-                    started
-                  </p>
-                  <div className="flex items-center justify-center space-x-3">
-                    <Button>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Bill
-                    </Button>
-                    <Button variant="outline">
-                      <CreditCard className="h-4 w-4 mr-2" />
-                      Connect Bank
-                    </Button>
-                  </div>
-                </div>
+            {/* Bills Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Bills Overview</h2>
+                {filteredBills.length > 0 && (
+                  <Badge variant="outline" className="text-xs">
+                    {filteredBills.filter(b => b.status !== 'paid').length} active
+                  </Badge>
+                )}
+              </div>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
+                {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+              </h2>
+              <div className="flex items-center space-x-2">
+                <Button variant="outline" size="sm" onClick={() => navigateCalendar('prev')} className="min-h-[44px] min-w-[44px]">
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setCurrentDate(new Date())} className="min-h-[44px] px-4">
+                  Today
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => navigateCalendar('next')} className="min-h-[44px] min-w-[44px]">
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
               ) : (
                 filteredBills.map((bill) => (
                   <BillTile
@@ -1114,14 +1101,18 @@ const Dashboard: React.FC = () => {
 
               {/* Legend */}
               <div className="mt-6 flex items-center justify-center space-x-6 text-sm text-gray-600">
-                <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 bg-red-400 rounded" />
-                  <span>Outflow</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 bg-green-400 rounded" />
-                  <span>Inflow</span>
-                </div>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900">7-Day Cash Flow</h2>
+              <div className="flex items-center space-x-2">
+                <Button variant="outline" size="sm" onClick={() => navigateCashflow('prev')} className="min-h-[44px] min-w-[44px]">
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="text-xs sm:text-sm text-gray-600 px-2">
+                  {formatDate(cashflowDate)} - {formatDate(new Date(cashflowDate.getTime() + 6 * 24 * 60 * 60 * 1000))}
+                </span>
+                <Button variant="outline" size="sm" onClick={() => navigateCashflow('next')} className="min-h-[44px] min-w-[44px]">
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
               </div>
             </div>
 
