@@ -248,7 +248,7 @@ const mockHouseholds: HouseholdContext[] = [
     type: "home",
     icon: <Home className="h-4 w-4" />,
     role: "owner",
-    totalMonthlyOutflow: 1200.5,
+    totalMonthlyOutflow: 2260.48,
     upcomingJointBills: 4,
   },
   {
@@ -256,45 +256,54 @@ const mockHouseholds: HouseholdContext[] = [
     name: "Rental Property",
     type: "rental",
     icon: <Building className="h-4 w-4" />,
-    role: "editor",
-    totalMonthlyOutflow: 850.0,
+    role: "owner",
+    totalMonthlyOutflow: 890.0,
     upcomingJointBills: 2,
+  },
+  {
+    id: "parents",
+    name: "Parents' House",
+    type: "parents",
+    icon: <Users className="h-4 w-4" />,
+    role: "editor",
+    totalMonthlyOutflow: 1540.25,
+    upcomingJointBills: 3,
   },
   {
     id: "shared",
     name: "Shared Apartment",
     type: "shared",
-    icon: <Users className="h-4 w-4" />,
-    role: "editor",
-    totalMonthlyOutflow: 650.0,
-    upcomingJointBills: 3,
+    icon: <UserCheck className="h-4 w-4" />,
+    role: "viewer",
+    totalMonthlyOutflow: 675.33,
+    upcomingJointBills: 1,
   },
 ];
 
 const mockSmartSuggestions: SmartSuggestion[] = [
   {
     id: "sug1",
-    type: "email_bill",
-    name: "Netflix Premium",
+    type: "recurring_payee",
+    name: "Netflix",
     amount: 15.99,
     confidence: 0.95,
-    source: "gmail",
-    lastSeen: "2024-03-10",
+    source: "plaid",
+    lastSeen: "2024-03-01",
     category: "Entertainment",
     estimatedDueDate: "2024-03-15",
-    description: "Detected from billing email - monthly subscription",
+    description: "Recurring monthly charge detected",
   },
   {
     id: "sug2",
-    type: "recurring_payee",
+    type: "email_bill",
     name: "Gym Membership",
-    amount: 45.0,
-    confidence: 0.88,
-    source: "plaid",
-    lastSeen: "2024-03-08",
+    amount: 29.99,
+    confidence: 0.87,
+    source: "gmail",
+    lastSeen: "2024-03-03",
     category: "Health & Fitness",
-    estimatedDueDate: "2024-03-12",
-    description: "Recurring transaction pattern detected",
+    estimatedDueDate: "2024-03-18",
+    description: "Bill found in your Gmail",
   },
   {
     id: "sug3",
@@ -447,7 +456,6 @@ const Dashboard: React.FC = () => {
     });
   };
 
-  // Smart suggestion handlers
   const handleConfirmSuggestion = (suggestion: SmartSuggestion) => {
     const newBill: Bill = {
       id: `bill_${Date.now()}`,
@@ -500,6 +508,21 @@ const Dashboard: React.FC = () => {
       className="min-h-screen bg-gray-50 pb-20"
       style={{ opacity: 1, visibility: "visible" }}
     >
+      {/* Success Toast */}
+      {showSuccessToast && (
+        <motion.div
+          initial={shouldReduceMotion ? {} : { opacity: 0, y: -50 }}
+          animate={shouldReduceMotion ? {} : { opacity: 1, y: 0 }}
+          exit={shouldReduceMotion ? {} : { opacity: 0, y: -50 }}
+          className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg"
+        >
+          <div className="flex items-center space-x-2">
+            <CheckCircle className="h-5 w-5" />
+            <span>{showSuccessToast}</span>
+          </div>
+        </motion.div>
+      )}
+
       {/* Header */}
       <div
         className="bg-gradient-to-r from-navy-900 to-navy-800 text-white p-6 pt-12"
@@ -521,12 +544,14 @@ const Dashboard: React.FC = () => {
           {/* Household Switcher */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="text-white hover:bg-white/10 space-x-2 min-h-[44px] px-3 py-2">
-                <div className="flex items-center space-x-2">
+              <Button
+                variant="ghost"
+                className="text-white border-white/20 hover:bg-white/10 min-h-[44px] px-3 sm:px-4"
+              >
+                <div className="flex items-center space-x-2 min-w-0">
                   {selectedHousehold.icon}
-                  <span className="hidden sm:inline font-medium">{selectedHousehold.name}</span>
-                  <span className="sm:hidden font-medium text-xs">
-                    {selectedHousehold.name.split(' ')[0]}
+                  <span className="truncate text-xs sm:text-sm">
+                    {selectedHousehold.name}
                   </span>
                   <ChevronDown className="h-4 w-4 flex-shrink-0" />
                 </div>
@@ -537,20 +562,20 @@ const Dashboard: React.FC = () => {
                 <DropdownMenuItem
                   key={household.id}
                   onClick={() => setSelectedHousehold(household)}
-                  className={cn(
-                    "flex items-center space-x-3 p-3",
-                    selectedHousehold.id === household.id && "bg-teal-50",
-                  )}
+                  className="flex items-center justify-between p-3"
                 >
-                  {household.icon}
-                  <div className="flex-1">
-                    <div className="font-medium">{household.name}</div>
-                    <div className="text-xs text-gray-500 capitalize">
-                      {household.role} • {household.upcomingJointBills} bills
+                  <div className="flex items-center space-x-3">
+                    {household.icon}
+                    <div>
+                      <p className="font-medium">{household.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {household.role} •{" "}
+                        {formatCurrency(household.totalMonthlyOutflow)}/mo
+                      </p>
                     </div>
                   </div>
                   {selectedHousehold.id === household.id && (
-                    <CheckCircle className="h-4 w-4 text-teal-600" />
+                    <CheckCircle className="h-4 w-4 text-green-600" />
                   )}
                 </DropdownMenuItem>
               ))}
@@ -559,204 +584,163 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Quick Stats */}
-        <div
-          className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 sm:p-4"
-          style={{
-            background: tokens.colors.opacity.glass,
-            backdropFilter: 'blur(12px)',
-          }}
-        >
-          <div className="grid grid-cols-2 gap-3 sm:gap-4">
-            <div className="min-w-0">
-              <p className="text-xs sm:text-sm opacity-80">Monthly Outflow</p>
-              <p className="text-lg sm:text-2xl font-bold truncate">{formatCurrency(selectedHousehold.totalMonthlyOutflow)}</p>
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs sm:text-sm opacity-80">Upcoming Bills</p>
-              <p className="text-lg sm:text-2xl font-bold">{selectedHousehold.upcomingJointBills}</p>
-            </div>
+        <div className="grid grid-cols-3 gap-3 sm:gap-6">
+          <div className="text-center">
+            <p className="text-2xl sm:text-3xl font-bold">
+              {filteredBills.filter((b) => b.status !== "paid").length}
+            </p>
+            <p className="text-xs sm:text-sm opacity-80">Active Bills</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl sm:text-3xl font-bold text-teal-400">
+              {formatCurrency(
+                filteredBills.reduce((sum, bill) => sum + bill.amount, 0),
+              )}
+            </p>
+            <p className="text-xs sm:text-sm opacity-80">Total Amount</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl sm:text-3xl font-bold text-amber-400">
+              {filteredBills.filter((b) => b.status === "overdue").length}
+            </p>
+            <p className="text-xs sm:text-sm opacity-80">Overdue</p>
           </div>
         </div>
       </div>
 
-      {/* Tabbed Navigation */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
-        <div className="px-3 sm:px-6">
-          <Tabs value={currentView} onValueChange={(value) => setCurrentView(value as any)} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 h-12 sm:h-14">
-              <TabsTrigger value="list" className="flex items-center justify-center space-x-1 sm:space-x-2 min-h-[44px]">
-                <List className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span className="text-xs sm:text-sm">List</span>
-              </TabsTrigger>
-              <TabsTrigger value="calendar" className="flex items-center justify-center space-x-1 sm:space-x-2 min-h-[44px]">
-                <CalendarDays className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span className="text-xs sm:text-sm">Calendar</span>
-              </TabsTrigger>
-              <TabsTrigger value="cashflow" className="flex items-center justify-center space-x-1 sm:space-x-2 min-h-[44px]">
-                <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span className="text-xs sm:text-sm hidden xs:inline">Cash Flow</span>
-                <span className="text-xs sm:text-sm xs:hidden">Flow</span>
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-      </div>
-      {/* Main Content */}
-      <div className="p-3 sm:p-6 pb-24" style={{ opacity: 1, visibility: 'visible' }}>
-        {/* List View */}
-        {currentView === "list" && (
-          <div className="space-y-6">
-            {/* Smart Suggestions Card */}
-            <AnimatePresence>
-              {smartSuggestions.length > 0 && (
-                <motion.div
-                  initial={shouldReduceMotion ? {} : { opacity: 0, y: -20 }}
-                  animate={shouldReduceMotion ? {} : { opacity: 1, y: 0 }}
-                  exit={
-                    shouldReduceMotion ? {} : { opacity: 0, y: -20, height: 0 }
-                  }
-                  transition={{ duration: shouldReduceMotion ? 0 : 0.3 }}
-                  className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-xl p-6"
+      <div className="p-6 pb-24">
+        {/* Smart Suggestions */}
+        {smartSuggestions.length > 0 && (
+          <motion.div
+            initial={shouldReduceMotion ? {} : { opacity: 0, y: 20 }}
+            animate={shouldReduceMotion ? {} : { opacity: 1, y: 0 }}
+            className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200 p-4 mb-6"
+          >
+            <div className="flex items-center space-x-2 mb-3">
+              <Brain className="h-5 w-5 text-blue-600" />
+              <h3 className="font-semibold text-gray-900">Smart Suggestions</h3>
+              <Badge variant="secondary" className="text-xs">
+                AI-powered
+              </Badge>
+            </div>
+            <p className="text-sm text-gray-600 mb-4">
+              We found {smartSuggestions.length} potential bills based on your
+              spending patterns and emails.
+            </p>
+            <div className="space-y-3">
+              {smartSuggestions.slice(0, 3).map((suggestion) => (
+                <div
+                  key={suggestion.id}
+                  className="bg-white rounded-lg border border-gray-200 p-4"
                 >
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                        <Sparkles className="h-4 w-4 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-gray-900">
-                          Smart Bill Discovery
-                        </h3>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3 flex-1 min-w-0">
+                      {getSourceIcon(suggestion.source)}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <h4 className="font-medium text-gray-900 truncate">
+                            {suggestion.name}
+                          </h4>
+                          <Badge
+                            variant="outline"
+                            className={`text-xs ${getConfidenceColor(suggestion.confidence)}`}
+                          >
+                            {Math.round(suggestion.confidence * 100)}% match
+                          </Badge>
+                        </div>
                         <p className="text-sm text-gray-600">
-                          AI found {smartSuggestions.length} potential bills
+                          {suggestion.description}
                         </p>
+                        {suggestion.amount && (
+                          <p className="text-sm font-medium text-gray-900 mt-1">
+                            {formatCurrency(suggestion.amount)}
+                          </p>
+                        )}
                       </div>
                     </div>
-                    <Badge className="bg-blue-100 text-blue-700 border-blue-200">
-                      AI Powered
-                    </Badge>
-                  </div>
-
-                  <div className="space-y-3">
-                    {smartSuggestions.slice(0, 3).map((suggestion) => (
-                      <motion.div
-                        key={suggestion.id}
-                        initial={
-                          shouldReduceMotion ? {} : { opacity: 0, x: -20 }
-                        }
-                        animate={shouldReduceMotion ? {} : { opacity: 1, x: 0 }}
-                        exit={shouldReduceMotion ? {} : { opacity: 0, x: 20 }}
-                        className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3 flex-1">
-                            <div className="flex items-center space-x-2">
-                              {getSourceIcon(suggestion.source)}
-                              <div className="w-2 h-2 bg-green-400 rounded-full" />
-                            </div>
-
-                            <div className="flex-1">
-                              <div className="flex items-center space-x-2">
-                                <h4 className="font-medium text-gray-900">
-                                  {suggestion.name}
-                                </h4>
-                                <Badge
-                                  variant="outline"
-                                  className={cn(
-                                    "text-xs",
-                                    getConfidenceColor(suggestion.confidence),
-                                  )}
-                                >
-                                  {Math.round(suggestion.confidence * 100)}%
-                                  match
-                                </Badge>
-                              </div>
-
-                              <div className="flex items-center space-x-4 mt-1">
-                                <span className="text-lg font-semibold text-gray-900">
-                                  {formatCurrency(suggestion.amount || 0)}
-                                </span>
-                                <span className="text-sm text-gray-500">
-                                  {suggestion.category}
-                                </span>
-                                {suggestion.estimatedDueDate && (
-                                  <span className="text-sm text-blue-600">
-                                    Due{" "}
-                                    {formatDate(
-                                      new Date(suggestion.estimatedDueDate),
-                                    )}
-                                  </span>
-                                )}
-                              </div>
-
-                              <p className="text-xs text-gray-500 mt-1">
-                                {suggestion.description}
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center space-x-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                handleDismissSuggestion(suggestion.id)
-                              }
-                              className="text-gray-500 hover:text-gray-700"
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              onClick={() =>
-                                handleConfirmSuggestion(suggestion)
-                              }
-                              className="bg-teal-600 hover:bg-teal-700 text-white"
-                            >
-                              <CheckCircle className="h-4 w-4 mr-1" />
-                              Confirm
-                            </Button>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-
-                  {smartSuggestions.length > 3 && (
-                    <div className="mt-3 text-center">
+                    <div className="flex items-center space-x-2 flex-shrink-0 ml-4">
                       <Button
-                        variant="ghost"
                         size="sm"
-                        className="text-blue-600"
+                        variant="outline"
+                        onClick={() => handleDismissSuggestion(suggestion.id)}
+                        className="min-h-[36px] min-w-[36px] p-0"
                       >
-                        View {smartSuggestions.length - 3} more suggestions
-                        <ArrowRight className="h-4 w-4 ml-1" />
+                        <X className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => handleConfirmSuggestion(suggestion)}
+                        className="bg-blue-600 hover:bg-blue-700 min-h-[36px]"
+                      >
+                        Confirm
                       </Button>
                     </div>
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
 
-            {/* Success Toast */}
-            <AnimatePresence>
-              {showSuccessToast && (
-                <motion.div
-                  initial={shouldReduceMotion ? {} : { opacity: 0, y: -50 }}
-                  animate={shouldReduceMotion ? {} : { opacity: 1, y: 0 }}
-                  exit={shouldReduceMotion ? {} : { opacity: 0, y: -50 }}
-                  className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2"
-                >
-                  <CheckCircle className="h-5 w-5" />
-                  <span className="font-medium">{showSuccessToast}</span>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Bills Header */}
+        {/* Overdue Bills Alert */}
+        {filteredBills.filter((b) => b.status === "overdue").length > 0 && (
+          <motion.div
+            initial={shouldReduceMotion ? {} : { opacity: 0, y: 20 }}
+            animate={shouldReduceMotion ? {} : { opacity: 1, y: 0 }}
+            className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6"
+          >
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <h2 className="text-lg font-semibold text-gray-900">
+                <AlertCircle className="h-5 w-5 text-red-600" />
+                <div>
+                  <h3 className="font-semibold text-red-900">
+                    Attention Required
+                  </h3>
+                  <p className="text-sm text-red-700">
+                    {filteredBills.filter((b) => b.status === "overdue").length}{" "}
+                    bills need immediate attention
+                  </p>
+                </div>
+              </div>
+              <Button size="sm" className="bg-red-600 hover:bg-red-700">
+                Pay Now
+              </Button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Tab Navigation */}
+        <Tabs
+          value={currentView}
+          onValueChange={(value) => setCurrentView(value as any)}
+        >
+          <TabsList className="grid w-full grid-cols-3 mb-6">
+            <TabsTrigger value="list" className="flex items-center space-x-2">
+              <List className="h-4 w-4" />
+              <span className="hidden sm:inline">List</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="calendar"
+              className="flex items-center space-x-2"
+            >
+              <CalendarDays className="h-4 w-4" />
+              <span className="hidden sm:inline">Calendar</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="cashflow"
+              className="flex items-center space-x-2"
+            >
+              <BarChart3 className="h-4 w-4" />
+              <span className="hidden sm:inline">Cash Flow</span>
+            </TabsTrigger>
+          </TabsList>
+
+          {/* List View */}
+          <TabsContent value="list" className="space-y-6">
+            {/* Bills Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
                   Bills Overview
                 </h2>
                 {filteredBills.length > 0 && (
@@ -766,74 +750,36 @@ const Dashboard: React.FC = () => {
                   </Badge>
                 )}
               </div>
-              <div className="flex items-center space-x-2">
-                <Button variant="ghost" size="sm" className="text-gray-600">
-                  <BarChart3 className="h-4 w-4 mr-1" />
-                  Insights
-                </Button>
-                <Button variant="outline" size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Bill
-                </Button>
-              </div>
+              <Button
+                onClick={() => navigate("/add-bill")}
+                className="bg-teal-400 hover:bg-teal-500 text-navy-900 min-h-[44px]"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Bill
+              </Button>
             </div>
 
-            {/* Quick Actions */}
-            {filteredBills.some((bill) => bill.status === "overdue") && (
-              <motion.div
-                initial={shouldReduceMotion ? {} : { opacity: 0, scale: 0.95 }}
-                animate={shouldReduceMotion ? {} : { opacity: 1, scale: 1 }}
-                className="bg-red-50 border border-red-200 rounded-lg p-4"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <AlertCircle className="h-5 w-5 text-red-600" />
-                    <div>
-                      <h3 className="font-medium text-red-900">
-                        Overdue Bills
-                      </h3>
-                      <p className="text-sm text-red-700">
-                        {
-                          filteredBills.filter((b) => b.status === "overdue")
-                            .length
-                        }{" "}
-                        bills need immediate attention
-                      </p>
-                    </div>
+            {/* Bills List */}
+            <div className="space-y-3">
+              {filteredBills.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <FileText className="h-8 w-8 text-gray-400" />
                   </div>
-                  <Button size="sm" className="bg-red-600 hover:bg-red-700">
-                    Pay Now
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    No bills yet
+                  </h3>
+                  <p className="text-gray-600 mb-4">
+                    Add your first bill to get started with BillBuddy
+                  </p>
+                  <Button
+                    onClick={() => navigate("/add-bill")}
+                    className="bg-teal-400 hover:bg-teal-500 text-navy-900"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Your First Bill
                   </Button>
                 </div>
-              </motion.div>
-            )}
-
-            {/* Bills Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div className="flex items-center space-x-2 sm:space-x-3">
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Bills Overview</h2>
-                {filteredBills.length > 0 && (
-                  <Badge variant="outline" className="text-xs">
-                    {filteredBills.filter(b => b.status !== 'paid').length} active
-                  </Badge>
-                )}
-              </div>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
-                {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-              </h2>
-              <div className="flex items-center space-x-2">
-                <Button variant="outline" size="sm" onClick={() => navigateCalendar('prev')} className="min-h-[44px] min-w-[44px]">
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => setCurrentDate(new Date())} className="min-h-[44px] px-4">
-                  Today
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => navigateCalendar('next')} className="min-h-[44px] min-w-[44px]">
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
               ) : (
                 filteredBills.map((bill) => (
                   <BillTile
@@ -857,55 +803,35 @@ const Dashboard: React.FC = () => {
                   Monthly Overview
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {[
-                    {
-                      label: "Total Bills",
-                      value: filteredBills.length,
-                      icon: <FileText className="h-4 w-4" />,
-                    },
-                    {
-                      label: "This Month",
-                      value: formatCurrency(
-                        filteredBills.reduce(
-                          (sum, bill) => sum + bill.amount,
-                          0,
-                        ),
+                  {Object.entries(
+                    filteredBills
+                      .filter((b) => b.status !== "paid")
+                      .reduce(
+                        (acc, bill) => {
+                          const category = bill.category || "Other";
+                          acc[category] = (acc[category] || 0) + bill.amount;
+                          return acc;
+                        },
+                        {} as Record<string, number>,
                       ),
-                      icon: <DollarSign className="h-4 w-4" />,
-                    },
-                    {
-                      label: "Due Soon",
-                      value: filteredBills.filter(
-                        (b) => b.status === "due-soon",
-                      ).length,
-                      icon: <Clock className="h-4 w-4" />,
-                    },
-                    {
-                      label: "On Auto-Pay",
-                      value: Math.floor(filteredBills.length * 0.6),
-                      icon: <Zap className="h-4 w-4" />,
-                    },
-                  ].map((stat, index) => (
-                    <div key={index} className="text-center">
-                      <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2 text-gray-600">
-                        {stat.icon}
-                      </div>
-                      <div className="text-sm font-medium text-gray-900">
-                        {stat.value}
-                      </div>
-                      <div className="text-xs text-gray-500">{stat.label}</div>
+                  ).map(([category, amount]) => (
+                    <div key={category} className="text-center">
+                      <p className="text-lg font-semibold text-gray-900">
+                        {formatCurrency(amount)}
+                      </p>
+                      <p className="text-sm text-gray-600">{category}</p>
                     </div>
                   ))}
                 </div>
               </motion.div>
             )}
-          </div>
-        )}
-        {/* Calendar View */}
-        {currentView === "calendar" && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">
+          </TabsContent>
+
+          {/* Calendar View */}
+          <TabsContent value="calendar" className="space-y-6">
+            {/* Calendar Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
                 {currentDate.toLocaleDateString("en-US", {
                   month: "long",
                   year: "numeric",
@@ -916,6 +842,7 @@ const Dashboard: React.FC = () => {
                   variant="outline"
                   size="sm"
                   onClick={() => navigateCalendar("prev")}
+                  className="min-h-[44px] min-w-[44px]"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
@@ -923,6 +850,7 @@ const Dashboard: React.FC = () => {
                   variant="outline"
                   size="sm"
                   onClick={() => setCurrentDate(new Date())}
+                  className="min-h-[44px] px-4"
                 >
                   Today
                 </Button>
@@ -930,6 +858,7 @@ const Dashboard: React.FC = () => {
                   variant="outline"
                   size="sm"
                   onClick={() => navigateCalendar("next")}
+                  className="min-h-[44px] min-w-[44px]"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
@@ -938,7 +867,7 @@ const Dashboard: React.FC = () => {
 
             {/* Calendar Grid */}
             <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-              {/* Header */}
+              {/* Calendar Header */}
               <div className="grid grid-cols-7 border-b border-gray-200">
                 {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
                   (day) => (
@@ -958,80 +887,68 @@ const Dashboard: React.FC = () => {
                   <div
                     key={index}
                     className={cn(
-                      "min-h-[120px] p-2 border-r border-b border-gray-100 relative",
-                      !day.isCurrentMonth && "bg-gray-50 text-gray-400",
-                      day.isToday && "bg-teal-50 border-teal-200",
+                      "min-h-[100px] p-2 border-b border-r border-gray-200",
+                      !day.isCurrentMonth && "bg-gray-50",
+                      day.isToday && "bg-blue-50",
                     )}
                   >
                     <div className="flex items-center justify-between mb-2">
                       <span
                         className={cn(
                           "text-sm font-medium",
-                          day.isToday && "text-teal-600",
+                          !day.isCurrentMonth && "text-gray-400",
+                          day.isToday && "text-blue-600",
                         )}
                       >
                         {day.date.getDate()}
                       </span>
                       {day.bills.length > 0 && (
-                        <Badge variant="secondary" className="text-xs">
-                          {day.bills.length}
-                        </Badge>
+                        <span className="text-xs text-gray-500">
+                          {formatCurrency(day.totalAmount)}
+                        </span>
                       )}
                     </div>
-
-                    {/* Bills for this day */}
                     <div className="space-y-1">
                       {day.bills.slice(0, 2).map((bill) => (
                         <div
                           key={bill.id}
                           className={cn(
-                            "px-2 py-1 rounded text-xs border",
+                            "text-xs p-1 rounded truncate border",
                             getStatusColor(bill.status),
                           )}
                         >
-                          <div className="font-medium truncate">
-                            {bill.billerName}
-                          </div>
-                          <div className="text-xs">
-                            {formatCurrency(bill.amount)}
-                          </div>
+                          {bill.billerName}
                         </div>
                       ))}
                       {day.bills.length > 2 && (
-                        <div className="px-2 py-1 rounded text-xs bg-gray-100 text-gray-600">
+                        <div className="text-xs text-gray-500 p-1">
                           +{day.bills.length - 2} more
                         </div>
                       )}
                     </div>
-
-                    {day.totalAmount > 0 && (
-                      <div className="absolute bottom-1 right-1 text-xs font-medium text-gray-600">
-                        {formatCurrency(day.totalAmount)}
-                      </div>
-                    )}
                   </div>
                 ))}
               </div>
             </div>
-          </div>
-        )}
+          </TabsContent>
 
-        {/* Cash Flow Timeline */}
-        {currentView === "cashflow" && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">
-                7-Day Cash Flow
+          {/* Cash Flow View */}
+          <TabsContent value="cashflow" className="space-y-6">
+            {/* Cash Flow Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
+                Cash Flow Timeline
               </h2>
               <div className="flex items-center space-x-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => navigateCashflow("prev")}
+                  className="min-h-[44px] min-w-[44px]"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-gray-600 px-4">
                   {formatDate(cashflowDate)} -{" "}
                   {formatDate(
                     new Date(cashflowDate.getTime() + 6 * 24 * 60 * 60 * 1000),
@@ -1041,146 +958,109 @@ const Dashboard: React.FC = () => {
                   variant="outline"
                   size="sm"
                   onClick={() => navigateCashflow("next")}
+                  className="min-h-[44px] min-w-[44px]"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
             </div>
 
-            {/* Horizontal Timeline */}
+            {/* Cash Flow Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-2">
+                    <TrendingDown className="h-5 w-5 text-red-600" />
+                    <div>
+                      <p className="text-sm text-gray-600">Total Outflow</p>
+                      <p className="text-lg font-semibold text-gray-900">
+                        {formatCurrency(
+                          cashflowDays.reduce(
+                            (sum, day) => sum + day.outflow,
+                            0,
+                          ),
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-2">
+                    <BarChart3 className="h-5 w-5 text-blue-600" />
+                    <div>
+                      <p className="text-sm text-gray-600">Peak Day</p>
+                      <p className="text-lg font-semibold text-gray-900">
+                        {formatCurrency(
+                          Math.max(...cashflowDays.map((d) => d.outflow)),
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-2">
+                    <Clock className="h-5 w-5 text-amber-600" />
+                    <div>
+                      <p className="text-sm text-gray-600">Bills Due</p>
+                      <p className="text-lg font-semibold text-gray-900">
+                        {cashflowDays.reduce(
+                          (sum, day) => sum + day.bills.length,
+                          0,
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Cash Flow Chart */}
             <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <div className="flex justify-between items-end space-x-4 h-64">
+              <h3 className="font-semibold text-gray-900 mb-4">
+                7-Day Overview
+              </h3>
+              <div className="space-y-4">
                 {cashflowDays.map((day, index) => {
-                  const maxOutflow =
-                    Math.max(...cashflowDays.map((d) => d.outflow)) || 1;
-                  const barHeight = (day.outflow / maxOutflow) * 200;
+                  const maxAmount = Math.max(
+                    ...cashflowDays.map((d) => d.outflow),
+                  );
+                  const percentage =
+                    maxAmount > 0 ? (day.outflow / maxAmount) * 100 : 0;
 
                   return (
-                    <div
-                      key={index}
-                      className="flex-1 flex flex-col items-center"
-                    >
-                      {/* Bar */}
-                      <div className="relative w-full max-w-[60px] flex flex-col items-center">
-                        <div className="text-xs text-gray-600 mb-2">
-                          {formatCurrency(day.outflow)}
-                        </div>
-                        <div
-                          className="w-full bg-gradient-to-t from-red-400 to-red-300 rounded-t-lg transition-all duration-300"
-                          style={{ height: `${barHeight}px` }}
-                        />
-                        <div className="w-full h-1 bg-gray-200 rounded-b-lg" />
+                    <div key={index} className="flex items-center space-x-4">
+                      <div className="w-16 text-sm text-gray-600">
+                        {formatDate(day.date)}
                       </div>
-
-                      {/* Date */}
-                      <div className="mt-3 text-center">
-                        <div className="text-sm font-medium text-gray-900">
-                          {day.date.toLocaleDateString("en-US", {
-                            weekday: "short",
-                          })}
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm font-medium text-gray-900">
+                            {formatCurrency(day.outflow)}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {day.bills.length} bills
+                          </span>
                         </div>
-                        <div className="text-xs text-gray-500">
-                          {day.date.toLocaleDateString("en-US", {
-                            month: "numeric",
-                            day: "numeric",
-                          })}
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div
+                            className="bg-red-500 h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${percentage}%` }}
+                          />
                         </div>
                       </div>
-
-                      {/* Bills count */}
-                      {day.bills.length > 0 && (
-                        <Badge variant="outline" className="mt-2 text-xs">
-                          {day.bills.length}{" "}
-                          {day.bills.length === 1 ? "bill" : "bills"}
-                        </Badge>
-                      )}
                     </div>
                   );
                 })}
               </div>
-
-              {/* Legend */}
-              <div className="mt-6 flex items-center justify-center space-x-6 text-sm text-gray-600">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <h2 className="text-lg sm:text-xl font-semibold text-gray-900">7-Day Cash Flow</h2>
-              <div className="flex items-center space-x-2">
-                <Button variant="outline" size="sm" onClick={() => navigateCashflow('prev')} className="min-h-[44px] min-w-[44px]">
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <span className="text-xs sm:text-sm text-gray-600 px-2">
-                  {formatDate(cashflowDate)} - {formatDate(new Date(cashflowDate.getTime() + 6 * 24 * 60 * 60 * 1000))}
-                </span>
-                <Button variant="outline" size="sm" onClick={() => navigateCashflow('next')} className="min-h-[44px] min-w-[44px]">
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
             </div>
-
-            {/* Cash Flow Summary */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-gray-600">
-                    Total Outflow
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-red-600">
-                    {formatCurrency(
-                      cashflowDays.reduce((sum, day) => sum + day.outflow, 0),
-                    )}
-                  </div>
-                  <p className="text-xs text-gray-500">Next 7 days</p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-gray-600">
-                    Peak Day
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-amber-600">
-                    {formatCurrency(
-                      Math.max(...cashflowDays.map((d) => d.outflow)),
-                    )}
-                  </div>
-                  <p className="text-xs text-gray-500">
-                    {cashflowDays
-                      .find(
-                        (d) =>
-                          d.outflow ===
-                          Math.max(...cashflowDays.map((day) => day.outflow)),
-                      )
-                      ?.date.toLocaleDateString("en-US", {
-                        weekday: "short",
-                        month: "short",
-                        day: "numeric",
-                      })}
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-gray-600">
-                    Bills Due
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-blue-600">
-                    {cashflowDays.reduce(
-                      (sum, day) => sum + day.bills.length,
-                      0,
-                    )}
-                  </div>
-                  <p className="text-xs text-gray-500">Next 7 days</p>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        )}
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Floating Action Button */}
