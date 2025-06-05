@@ -38,6 +38,8 @@ import {
   ChevronLeft,
   ChevronRight,
   MoreHorizontal,
+  Mail,
+  FileText,
 } from "lucide-react";
 import { BillTile } from "@/components/BillTile";
 import { FloatingActionButton } from "@/components/FloatingActionButton";
