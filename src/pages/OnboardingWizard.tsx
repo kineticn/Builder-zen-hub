@@ -585,7 +585,7 @@ const WelcomeStep: React.FC<{
         className="max-w-2xl mx-auto w-full space-y-8 flex-1 flex flex-col justify-center"
         style={{ opacity: 1, visibility: "visible" }}
       >
-        <motion.div className="text-center space-y-6" {...motionProps}>
+        <div className="text-center space-y-6" style={{ opacity: 1, visibility: 'visible' }}>
           <div className="flex items-center justify-center">
             <div
               className="w-20 h-20 rounded-full bg-gradient-to-r from-teal-400 to-teal-500 flex items-center justify-center shadow-lg"
@@ -1282,7 +1282,7 @@ const AccountCreationStep: React.FC<{
                   ))}
                 </div>
               </div>
-            </motion.div>
+            </div>
           )}
 
           {/* Navigation buttons */}
@@ -2058,11 +2058,9 @@ const CompletionStep: React.FC<{
           </div>
 
           {/* Summary of what was set up */}
-          <motion.div
+          <div
             className="bg-white border border-gray-200 rounded-xl p-6 text-left space-y-4"
-            initial={shouldReduceMotion ? {} : { opacity: 0, y: 20 }}
-            animate={shouldReduceMotion ? {} : { opacity: 1, y: 0 }}
-            transition={{ delay: shouldReduceMotion ? 0 : 0.2 }}
+            style={{ opacity: 1, visibility: 'visible' }}
           >
             <h3 className="font-semibold text-gray-900 text-center mb-4">
               Here's what we've set up for you:
@@ -2125,11 +2123,9 @@ const CompletionStep: React.FC<{
 
           {/* Next steps */}
           {state.discoveredBills.length > 0 && (
-            <motion.div
+            <div
               className="bg-teal-50 border border-teal-200 rounded-lg p-4"
-              initial={shouldReduceMotion ? {} : { opacity: 0 }}
-              animate={shouldReduceMotion ? {} : { opacity: 1 }}
-              transition={{ delay: shouldReduceMotion ? 0 : 0.4 }}
+              style={{ opacity: 1, visibility: 'visible' }}
             >
               <p className="text-sm text-teal-800">
                 💡 <strong>Pro tip:</strong> We'll continue scanning your
@@ -2158,12 +2154,10 @@ const CompletionStep: React.FC<{
               color: "bg-purple-100 text-purple-600",
             },
           ].map((feature, index) => (
-            <motion.div
+            <div
               key={feature.label}
               className="text-center"
-              initial={shouldReduceMotion ? {} : { scale: 0 }}
-              animate={shouldReduceMotion ? {} : { scale: 1 }}
-              transition={{ delay: shouldReduceMotion ? 0 : 0.4 + index * 0.1 }}
+              style={{ opacity: 1, visibility: 'visible' }}
             >
               <div
                 className={cn(
