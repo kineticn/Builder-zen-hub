@@ -485,7 +485,7 @@ const OnboardingWizard: React.FC = () => {
         initial: { opacity: 0 },
         animate: { opacity: 1 },
         exit: { opacity: 0 },
-      transition={{ duration: shouldReduceMotion ? 0 : 0.2 }}
+        transition: { duration: motionDuration },
       };
 
   return (
@@ -557,11 +557,13 @@ const WelcomeStep: React.FC<{
   };
 
   const motionDuration = shouldReduceMotion ? 0 : 0.2;
-  const motionProps = shouldReduceMotion ? {} : {
-    initial: { y: 20, opacity: 0 },
-    animate: { y: 0, opacity: 1 },
-    transition: { duration: motionDuration }
-  };
+  const motionProps = shouldReduceMotion
+    ? {}
+    : {
+        initial: { y: 20, opacity: 0 },
+        animate: { y: 0, opacity: 1 },
+        transition: { duration: motionDuration },
+      };
 
   return (
     <div className="flex-1 flex flex-col p-6">
