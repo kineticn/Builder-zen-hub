@@ -1,8 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { BottomNavBar } from "@/components/BottomNavBar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -11,398 +14,980 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  TrendingUp,
-  TrendingDown,
-  DollarSign,
-  Users,
-  Eye,
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   Settings,
+  Shield,
+  Activity,
+  Zap,
+  Users,
+  AlertTriangle,
   CheckCircle,
-  XCircle,
   Clock,
+  Download,
+  Upload,
+  Eye,
+  EyeOff,
+  RotateCcw,
+  Save,
+  Bell,
+  BellOff,
 } from "lucide-react";
+import { ComplianceStatusCard } from "@/components/admin/ComplianceStatusCard";
+import { RiskFlagTable } from "@/components/admin/RiskFlagTable";
+import { BillSyncStatus } from "@/components/admin/BillSyncStatus";
+import {
+  mockComplianceData,
+  mockRiskFlags,
+  mockBillSyncData,
+  mockAdminConfig,
+} from "@/data/adminData";
+import {
+  ComplianceMetrics,
+  RiskFlag,
+  BillSyncMetrics,
+  AdminConfiguration,
+  AdminWidget,
+} from "@/types/admin";
 import { cn } from "@/lib/utils";
+import { tokens } from "@/design-tokens";
 
-interface KPICard {
-  title: string;
-  value: string | number;
-  change: number;
-  icon: React.ReactNode;
-  trend: "up" | "down";
+interface ConfigurationPanelProps {
+  config: AdminConfiguration;
+  onConfigChange: (config: AdminConfiguration) => void;
+  onClose: () => void;
 }
 
-interface ScrapingJob {
-  id: string;
-  provider: "tesseract" | "google-vision";
-  status: "running" | "completed" | "failed";
-  accuracy: number;
-  processedCount: number;
-  totalCount: number;
-  startTime: string;
-  duration?: string;
-}
+const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
+  config,
+  onConfigChange,
+  onClose,
+}) => {
+  const [localConfig, setLocalConfig] = useState<AdminConfiguration>(config);
 
-const kpiData: KPICard[] = [
-  {
-    title: "Daily Transactions",
-    value: "1,247",
-    change: 12.5,
-    icon: <DollarSign className="h-4 w-4" />,
-    trend: "up",
-  },
-  {
-    title: "Success Rate",
-    value: "98.2%",
-    change: 2.1,
-    icon: <CheckCircle className="h-4 w-4" />,
-    trend: "up",
-  },
-  {
-    title: "OCR Accuracy",
-    value: "94.8%",
-    change: -1.2,
-    icon: <Eye className="h-4 w-4" />,
-    trend: "down",
-  },
-  {
-    title: "Active Users",
-    value: "8,549",
-    change: 8.7,
-    icon: <Users className="h-4 w-4" />,
-    trend: "up",
-  },
-];
-
-const mockScrapingJobs: ScrapingJob[] = [
-  {
-    id: "1",
-    provider: "google-vision",
-    status: "completed",
-    accuracy: 96.5,
-    processedCount: 1250,
-    totalCount: 1250,
-    startTime: "2024-03-15T10:30:00Z",
-    duration: "2m 34s",
-  },
-  {
-    id: "2",
-    provider: "tesseract",
-    status: "running",
-    accuracy: 89.2,
-    processedCount: 890,
-    totalCount: 1100,
-    startTime: "2024-03-15T11:15:00Z",
-  },
-  {
-    id: "3",
-    provider: "google-vision",
-    status: "failed",
-    accuracy: 0,
-    processedCount: 45,
-    totalCount: 1000,
-    startTime: "2024-03-15T09:45:00Z",
-    duration: "0m 12s",
-  },
-  {
-    id: "4",
-    provider: "tesseract",
-    status: "completed",
-    accuracy: 91.8,
-    processedCount: 750,
-    totalCount: 750,
-    startTime: "2024-03-15T08:20:00Z",
-    duration: "5m 18s",
-  },
-];
-
-const AdminDashboard: React.FC = () => {
-  const [selectedProvider, setSelectedProvider] = useState<string>("all");
-
-  const formatTime = (isoString: string) => {
-    return new Date(isoString).toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+  const handleSave = () => {
+    onConfigChange(localConfig);
+    onClose();
   };
 
-  const getStatusIcon = (status: ScrapingJob["status"]) => {
-    switch (status) {
-      case "completed":
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case "failed":
-        return <XCircle className="h-4 w-4 text-red-500" />;
-      case "running":
-        return <Clock className="h-4 w-4 text-blue-500" />;
+  const updateWidgetSetting = (
+    widgetId: string,
+    settingKey: string,
+    value: any,
+  ) => {
+    setLocalConfig((prev) => ({
+      ...prev,
+      widgets: prev.widgets.map((widget) =>
+        widget.id === widgetId
+          ? { ...widget, settings: { ...widget.settings, [settingKey]: value } }
+          : widget,
+      ),
+    }));
+  };
+
+  const updateWidgetRefreshInterval = (widgetId: string, interval: number) => {
+    setLocalConfig((prev) => ({
+      ...prev,
+      widgets: prev.widgets.map((widget) =>
+        widget.id === widgetId
+          ? { ...widget, refreshInterval: interval }
+          : widget,
+      ),
+    }));
+  };
+
+  const toggleWidgetAutoRefresh = (widgetId: string, autoRefresh: boolean) => {
+    setLocalConfig((prev) => ({
+      ...prev,
+      widgets: prev.widgets.map((widget) =>
+        widget.id === widgetId ? { ...widget, autoRefresh } : widget,
+      ),
+    }));
+  };
+
+  const updateThreshold = (category: string, type: string, value: number) => {
+    setLocalConfig((prev) => ({
+      ...prev,
+      thresholds: {
+        ...prev.thresholds,
+        [category]: {
+          ...prev.thresholds[category as keyof typeof prev.thresholds],
+          [type]: value,
+        },
+      },
+    }));
+  };
+
+  return (
+    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogHeader>
+        <DialogTitle>Admin Dashboard Configuration</DialogTitle>
+        <DialogDescription>
+          Configure widgets, thresholds, and notifications for your admin
+          dashboard. Changes are applied immediately and saved to your profile.
+        </DialogDescription>
+      </DialogHeader>
+
+      <Tabs defaultValue="widgets" className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="widgets">Widgets</TabsTrigger>
+          <TabsTrigger value="layout">Layout</TabsTrigger>
+          <TabsTrigger value="thresholds">Thresholds</TabsTrigger>
+          <TabsTrigger value="notifications">Notifications</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="widgets" className="space-y-4">
+          <div className="space-y-6">
+            {localConfig.widgets.map((widget) => (
+              <Card key={widget.id}>
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <span className="text-base">{widget.title}</span>
+                    <Badge
+                      variant={widget.configurable ? "default" : "secondary"}
+                    >
+                      {widget.configurable ? "Configurable" : "Fixed"}
+                    </Badge>
+                  </CardTitle>
+                  <p className="text-sm text-gray-600">{widget.description}</p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Refresh Settings */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor={`refresh-${widget.id}`}>
+                        Refresh Interval (seconds)
+                      </Label>
+                      <Input
+                        id={`refresh-${widget.id}`}
+                        type="number"
+                        value={widget.refreshInterval}
+                        onChange={(e) =>
+                          updateWidgetRefreshInterval(
+                            widget.id,
+                            parseInt(e.target.value),
+                          )
+                        }
+                        min="30"
+                        max="3600"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor={`auto-refresh-${widget.id}`}>
+                        Auto Refresh
+                      </Label>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id={`auto-refresh-${widget.id}`}
+                          checked={widget.autoRefresh}
+                          onCheckedChange={(checked) =>
+                            toggleWidgetAutoRefresh(widget.id, checked)
+                          }
+                        />
+                        <span className="text-sm text-gray-600">
+                          {widget.autoRefresh ? "Enabled" : "Disabled"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Widget-specific Settings */}
+                  {widget.type === "compliance" && (
+                    <div className="space-y-4 border-t pt-4">
+                      <h4 className="font-medium">Compliance Settings</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Display Mode</Label>
+                          <Select
+                            value={widget.settings.displayMode}
+                            onValueChange={(value) =>
+                              updateWidgetSetting(
+                                widget.id,
+                                "displayMode",
+                                value,
+                              )
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="circular">
+                                Circular Progress
+                              </SelectItem>
+                              <SelectItem value="linear">
+                                Linear Progress
+                              </SelectItem>
+                              <SelectItem value="detailed">
+                                Detailed View
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Alert Threshold (%)</Label>
+                          <Input
+                            type="number"
+                            value={widget.settings.alertThreshold}
+                            onChange={(e) =>
+                              updateWidgetSetting(
+                                widget.id,
+                                "alertThreshold",
+                                parseInt(e.target.value),
+                              )
+                            }
+                            min="0"
+                            max="100"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          checked={widget.settings.showTrends}
+                          onCheckedChange={(checked) =>
+                            updateWidgetSetting(
+                              widget.id,
+                              "showTrends",
+                              checked,
+                            )
+                          }
+                        />
+                        <Label>Show Trend Analytics</Label>
+                      </div>
+                    </div>
+                  )}
+
+                  {widget.type === "risk" && (
+                    <div className="space-y-4 border-t pt-4">
+                      <h4 className="font-medium">Risk Management Settings</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Auto-assign Escalation Time (seconds)</Label>
+                          <Input
+                            type="number"
+                            value={widget.settings.escalationTime}
+                            onChange={(e) =>
+                              updateWidgetSetting(
+                                widget.id,
+                                "escalationTime",
+                                parseInt(e.target.value),
+                              )
+                            }
+                            min="300"
+                            max="86400"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex items-center space-x-2">
+                            <Switch
+                              checked={widget.settings.autoAssign}
+                              onCheckedChange={(checked) =>
+                                updateWidgetSetting(
+                                  widget.id,
+                                  "autoAssign",
+                                  checked,
+                                )
+                              }
+                            />
+                            <Label>Auto-assign High Priority Flags</Label>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          checked={widget.settings.showResolved}
+                          onCheckedChange={(checked) =>
+                            updateWidgetSetting(
+                              widget.id,
+                              "showResolved",
+                              checked,
+                            )
+                          }
+                        />
+                        <Label>Show Resolved Flags</Label>
+                      </div>
+                    </div>
+                  )}
+
+                  {widget.type === "sync" && (
+                    <div className="space-y-4 border-t pt-4">
+                      <h4 className="font-medium">Sync Monitoring Settings</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Response Time Alert Threshold (ms)</Label>
+                          <Input
+                            type="number"
+                            value={widget.settings.responseTimeThreshold}
+                            onChange={(e) =>
+                              updateWidgetSetting(
+                                widget.id,
+                                "responseTimeThreshold",
+                                parseInt(e.target.value),
+                              )
+                            }
+                            min="100"
+                            max="10000"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex items-center space-x-2">
+                            <Switch
+                              checked={widget.settings.alertOnDowntime}
+                              onCheckedChange={(checked) =>
+                                updateWidgetSetting(
+                                  widget.id,
+                                  "alertOnDowntime",
+                                  checked,
+                                )
+                              }
+                            />
+                            <Label>Alert on Downtime</Label>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          checked={widget.settings.showMaintenanceMode}
+                          onCheckedChange={(checked) =>
+                            updateWidgetSetting(
+                              widget.id,
+                              "showMaintenanceMode",
+                              checked,
+                            )
+                          }
+                        />
+                        <Label>Show Maintenance Mode Webhooks</Label>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="layout" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Layout Configuration</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Grid Layout</Label>
+                <Select
+                  value={localConfig.layout.grid}
+                  onValueChange={(value) =>
+                    setLocalConfig((prev) => ({
+                      ...prev,
+                      layout: { ...prev.layout, grid: value as any },
+                    }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="2x2">2x2 Grid</SelectItem>
+                    <SelectItem value="3x1">3x1 Horizontal</SelectItem>
+                    <SelectItem value="1x3">1x3 Vertical</SelectItem>
+                    <SelectItem value="custom">Custom Layout</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label>Mobile Breakpoint (px)</Label>
+                  <Input
+                    type="number"
+                    value={localConfig.layout.breakpoints.mobile}
+                    onChange={(e) =>
+                      setLocalConfig((prev) => ({
+                        ...prev,
+                        layout: {
+                          ...prev.layout,
+                          breakpoints: {
+                            ...prev.layout.breakpoints,
+                            mobile: parseInt(e.target.value),
+                          },
+                        },
+                      }))
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Tablet Breakpoint (px)</Label>
+                  <Input
+                    type="number"
+                    value={localConfig.layout.breakpoints.tablet}
+                    onChange={(e) =>
+                      setLocalConfig((prev) => ({
+                        ...prev,
+                        layout: {
+                          ...prev.layout,
+                          breakpoints: {
+                            ...prev.layout.breakpoints,
+                            tablet: parseInt(e.target.value),
+                          },
+                        },
+                      }))
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Desktop Breakpoint (px)</Label>
+                  <Input
+                    type="number"
+                    value={localConfig.layout.breakpoints.desktop}
+                    onChange={(e) =>
+                      setLocalConfig((prev) => ({
+                        ...prev,
+                        layout: {
+                          ...prev.layout,
+                          breakpoints: {
+                            ...prev.layout.breakpoints,
+                            desktop: parseInt(e.target.value),
+                          },
+                        },
+                      }))
+                    }
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="thresholds" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">
+                  Compliance Thresholds
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Critical Threshold (%)</Label>
+                  <Input
+                    type="number"
+                    value={localConfig.thresholds.compliance.critical}
+                    onChange={(e) =>
+                      updateThreshold(
+                        "compliance",
+                        "critical",
+                        parseInt(e.target.value),
+                      )
+                    }
+                    min="0"
+                    max="100"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Warning Threshold (%)</Label>
+                  <Input
+                    type="number"
+                    value={localConfig.thresholds.compliance.warning}
+                    onChange={(e) =>
+                      updateThreshold(
+                        "compliance",
+                        "warning",
+                        parseInt(e.target.value),
+                      )
+                    }
+                    min="0"
+                    max="100"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Risk Thresholds</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>High Risk Threshold (1-10)</Label>
+                  <Input
+                    type="number"
+                    value={localConfig.thresholds.risk.high}
+                    onChange={(e) =>
+                      updateThreshold("risk", "high", parseInt(e.target.value))
+                    }
+                    min="1"
+                    max="10"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Escalation Time (seconds)</Label>
+                  <Input
+                    type="number"
+                    value={localConfig.thresholds.risk.escalation}
+                    onChange={(e) =>
+                      updateThreshold(
+                        "risk",
+                        "escalation",
+                        parseInt(e.target.value),
+                      )
+                    }
+                    min="300"
+                    max="86400"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Sync Thresholds</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Downtime Alert (seconds)</Label>
+                  <Input
+                    type="number"
+                    value={localConfig.thresholds.sync.downtime}
+                    onChange={(e) =>
+                      updateThreshold(
+                        "sync",
+                        "downtime",
+                        parseInt(e.target.value),
+                      )
+                    }
+                    min="60"
+                    max="3600"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Error Rate Alert (%)</Label>
+                  <Input
+                    type="number"
+                    value={localConfig.thresholds.sync.errorRate}
+                    onChange={(e) =>
+                      updateThreshold(
+                        "sync",
+                        "errorRate",
+                        parseInt(e.target.value),
+                      )
+                    }
+                    min="1"
+                    max="50"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="notifications" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Notification Preferences</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Email Notifications</Label>
+                    <p className="text-sm text-gray-600">
+                      Receive email alerts for critical events
+                    </p>
+                  </div>
+                  <Switch
+                    checked={localConfig.notifications.email}
+                    onCheckedChange={(checked) =>
+                      setLocalConfig((prev) => ({
+                        ...prev,
+                        notifications: {
+                          ...prev.notifications,
+                          email: checked,
+                        },
+                      }))
+                    }
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Browser Notifications</Label>
+                    <p className="text-sm text-gray-600">
+                      Show browser push notifications
+                    </p>
+                  </div>
+                  <Switch
+                    checked={localConfig.notifications.browser}
+                    onCheckedChange={(checked) =>
+                      setLocalConfig((prev) => ({
+                        ...prev,
+                        notifications: {
+                          ...prev.notifications,
+                          browser: checked,
+                        },
+                      }))
+                    }
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Slack Integration</Label>
+                    <p className="text-sm text-gray-600">
+                      Send alerts to Slack channels
+                    </p>
+                  </div>
+                  <Switch
+                    checked={localConfig.notifications.slack}
+                    onCheckedChange={(checked) =>
+                      setLocalConfig((prev) => ({
+                        ...prev,
+                        notifications: {
+                          ...prev.notifications,
+                          slack: checked,
+                        },
+                      }))
+                    }
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      <div className="flex items-center justify-between pt-4 border-t">
+        <Button variant="outline" onClick={onClose}>
+          Cancel
+        </Button>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            onClick={() => setLocalConfig(mockAdminConfig)}
+          >
+            <RotateCcw className="h-4 w-4 mr-2" />
+            Reset to Defaults
+          </Button>
+          <Button onClick={handleSave}>
+            <Save className="h-4 w-4 mr-2" />
+            Save Configuration
+          </Button>
+        </div>
+      </div>
+    </DialogContent>
+  );
+};
+
+const AdminDashboard: React.FC = () => {
+  const [complianceData, setComplianceData] =
+    useState<ComplianceMetrics>(mockComplianceData);
+  const [riskFlags, setRiskFlags] = useState<RiskFlag[]>(mockRiskFlags);
+  const [syncData, setSyncData] = useState<BillSyncMetrics>(mockBillSyncData);
+  const [adminConfig, setAdminConfig] =
+    useState<AdminConfiguration>(mockAdminConfig);
+  const [isConfigOpen, setIsConfigOpen] = useState(false);
+  const [lastRefresh, setLastRefresh] = useState(new Date());
+
+  // Auto-refresh functionality
+  useEffect(() => {
+    const intervals: NodeJS.Timeout[] = [];
+
+    adminConfig.widgets.forEach((widget) => {
+      if (widget.autoRefresh) {
+        const interval = setInterval(() => {
+          handleRefreshWidget(widget.type);
+        }, widget.refreshInterval * 1000);
+        intervals.push(interval);
+      }
+    });
+
+    return () => {
+      intervals.forEach((interval) => clearInterval(interval));
+    };
+  }, [adminConfig.widgets]);
+
+  const handleRefreshWidget = async (type: "compliance" | "risk" | "sync") => {
+    // In a real application, these would be API calls
+    switch (type) {
+      case "compliance":
+        // Simulate API call
+        setTimeout(() => {
+          setComplianceData((prev) => ({
+            ...prev,
+            overall: {
+              ...prev.overall,
+              lastUpdated: new Date().toISOString(),
+            },
+          }));
+        }, 500);
+        break;
+      case "risk":
+        // Simulate API call for risk flags
+        break;
+      case "sync":
+        // Simulate API call for sync data
+        break;
+    }
+    setLastRefresh(new Date());
+  };
+
+  const handleRiskFlagAction = (flagId: string, status: RiskFlag["status"]) => {
+    setRiskFlags((prev) =>
+      prev.map((flag) =>
+        flag.id === flagId
+          ? {
+              ...flag,
+              status,
+              resolvedAt:
+                status === "resolved" ? new Date().toISOString() : undefined,
+            }
+          : flag,
+      ),
+    );
+  };
+
+  const handleWebhookAction = (
+    webhookId: string,
+    action: "restart" | "pause" | "test",
+  ) => {
+    setSyncData((prev) => ({
+      ...prev,
+      webhooks: prev.webhooks.map((webhook) =>
+        webhook.id === webhookId
+          ? {
+              ...webhook,
+              status:
+                action === "restart"
+                  ? "healthy"
+                  : action === "pause"
+                    ? "maintenance"
+                    : webhook.status,
+              lastPing: new Date().toISOString(),
+            }
+          : webhook,
+      ),
+    }));
+  };
+
+  const getLayoutClasses = () => {
+    switch (adminConfig.layout.grid) {
+      case "2x2":
+        return "grid grid-cols-1 lg:grid-cols-2 gap-6";
+      case "3x1":
+        return "grid grid-cols-1 lg:grid-cols-3 gap-6";
+      case "1x3":
+        return "grid grid-cols-1 gap-6";
       default:
-        return null;
+        return "grid grid-cols-1 lg:grid-cols-3 gap-6";
     }
   };
 
-  const getStatusBadge = (status: ScrapingJob["status"]) => {
-    const variants = {
-      completed: "bg-green-100 text-green-700",
-      failed: "bg-red-100 text-red-700",
-      running: "bg-blue-100 text-blue-700",
-    };
-
-    return (
-      <Badge variant="secondary" className={variants[status]}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
-      </Badge>
-    );
-  };
-
-  const getProviderBadge = (provider: ScrapingJob["provider"]) => {
-    const variants = {
-      "google-vision": "bg-purple-100 text-purple-700",
-      tesseract: "bg-orange-100 text-orange-700",
-    };
-
-    return (
-      <Badge variant="secondary" className={variants[provider]}>
-        {provider === "google-vision" ? "Google Vision" : "Tesseract"}
-      </Badge>
-    );
-  };
-
-  const filteredJobs =
-    selectedProvider === "all"
-      ? mockScrapingJobs
-      : mockScrapingJobs.filter((job) => job.provider === selectedProvider);
-
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div
+      className="min-h-screen bg-gray-50 pb-20"
+      style={{ opacity: 1, visibility: "visible" }}
+    >
       {/* Header */}
-      <div className="bg-gradient-to-r from-navy-900 to-navy-800 text-white p-6 pt-12">
+      <div
+        className="bg-gradient-to-r from-navy-900 to-navy-800 text-white p-6 pt-12"
+        style={{
+          background: `linear-gradient(135deg, ${tokens.colors.primary.navy[900]}, ${tokens.colors.primary.navy[800]})`,
+        }}
+      >
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold font-display">Admin Dashboard</h1>
+            <h1 className="text-2xl font-bold">Admin Dashboard</h1>
             <p className="text-navy-200 mt-1">
               System monitoring and configuration
             </p>
           </div>
-          <Button
-            variant="secondary"
-            size="sm"
-            className="bg-white/10 hover:bg-white/20 text-white border-white/20"
-          >
-            <Settings className="h-4 w-4 mr-2" />
-            Settings
-          </Button>
+          <div className="flex items-center space-x-3">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="text-xs text-navy-200">
+                    Last updated: {lastRefresh.toLocaleTimeString()}
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Auto-refresh based on widget settings</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <Dialog open={isConfigOpen} onOpenChange={setIsConfigOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="bg-white/10 hover:bg-white/20 text-white border-white/20"
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  Configure
+                </Button>
+              </DialogTrigger>
+              <ConfigurationPanel
+                config={adminConfig}
+                onConfigChange={setAdminConfig}
+                onClose={() => setIsConfigOpen(false)}
+              />
+            </Dialog>
+          </div>
+        </div>
+
+        {/* Quick Status Indicators */}
+        <div className="grid grid-cols-3 gap-6">
+          <div className="text-center">
+            <div className="flex items-center justify-center space-x-2 mb-1">
+              <Shield className="h-5 w-5" />
+              <span className="text-2xl font-bold">
+                {complianceData.overall.percentage.toFixed(1)}%
+              </span>
+            </div>
+            <p className="text-xs opacity-80">Compliance Rate</p>
+          </div>
+          <div className="text-center">
+            <div className="flex items-center justify-center space-x-2 mb-1">
+              <AlertTriangle className="h-5 w-5" />
+              <span className="text-2xl font-bold text-amber-400">
+                {riskFlags.filter((f) => f.status === "active").length}
+              </span>
+            </div>
+            <p className="text-xs opacity-80">Active Risk Flags</p>
+          </div>
+          <div className="text-center">
+            <div className="flex items-center justify-center space-x-2 mb-1">
+              <Activity className="h-5 w-5" />
+              <span className="text-2xl font-bold text-teal-400">
+                {syncData.webhooks.filter((w) => w.status === "healthy").length}
+                /{syncData.webhooks.length}
+              </span>
+            </div>
+            <p className="text-xs opacity-80">Healthy Webhooks</p>
+          </div>
         </div>
       </div>
 
-      <div className="p-6 space-y-6">
-        {/* KPI Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {kpiData.map((kpi, index) => (
-            <Card key={index}>
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-2">
-                  <div className="p-2 bg-teal-100 rounded-lg">{kpi.icon}</div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-600 truncate">
-                      {kpi.title}
-                    </p>
-                    <div className="flex items-center space-x-2 mt-1">
-                      <p className="text-xl font-bold text-gray-900">
-                        {kpi.value}
-                      </p>
-                      <div
-                        className={cn(
-                          "flex items-center text-xs font-medium",
-                          kpi.trend === "up"
-                            ? "text-green-600"
-                            : "text-red-600",
-                        )}
-                      >
-                        {kpi.trend === "up" ? (
-                          <TrendingUp className="h-3 w-3 mr-1" />
-                        ) : (
-                          <TrendingDown className="h-3 w-3 mr-1" />
-                        )}
-                        {Math.abs(kpi.change)}%
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+      <div className="p-6">
+        {/* Main Widget Grid */}
+        <div className={getLayoutClasses()}>
+          {/* Compliance Status Widget */}
+          <div
+            className={adminConfig.layout.grid === "1x3" ? "lg:col-span-1" : ""}
+          >
+            <ComplianceStatusCard
+              data={complianceData}
+              refreshInterval={
+                adminConfig.widgets.find((w) => w.type === "compliance")
+                  ?.refreshInterval
+              }
+              onRefresh={() => handleRefreshWidget("compliance")}
+              onConfigure={() => setIsConfigOpen(true)}
+              configurable={
+                adminConfig.widgets.find((w) => w.type === "compliance")
+                  ?.configurable
+              }
+              className="h-full"
+            />
+          </div>
+
+          {/* Bill Sync Status Widget */}
+          <div
+            className={adminConfig.layout.grid === "1x3" ? "lg:col-span-1" : ""}
+          >
+            <BillSyncStatus
+              data={syncData}
+              onRefresh={() => handleRefreshWidget("sync")}
+              onConfigure={() => setIsConfigOpen(true)}
+              onWebhookAction={handleWebhookAction}
+              configurable={
+                adminConfig.widgets.find((w) => w.type === "sync")?.configurable
+              }
+              className="h-full"
+            />
+          </div>
+
+          {/* Risk Flag Table Widget */}
+          <div
+            className={
+              adminConfig.layout.grid === "2x2"
+                ? "lg:col-span-2"
+                : adminConfig.layout.grid === "1x3"
+                  ? "lg:col-span-1"
+                  : ""
+            }
+          >
+            <RiskFlagTable
+              data={riskFlags}
+              onUpdateStatus={handleRiskFlagAction}
+              onRefresh={() => handleRefreshWidget("risk")}
+              onConfigure={() => setIsConfigOpen(true)}
+              configurable={
+                adminConfig.widgets.find((w) => w.type === "risk")?.configurable
+              }
+              className="h-full"
+            />
+          </div>
         </div>
 
-        {/* OCR Provider Selection */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="font-display">
-                OCR Processing Jobs
-              </CardTitle>
-              <Select
-                value={selectedProvider}
-                onValueChange={setSelectedProvider}
-              >
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Select provider" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Providers</SelectItem>
-                  <SelectItem value="google-vision">Google Vision</SelectItem>
-                  <SelectItem value="tesseract">Tesseract</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Provider</TableHead>
-                  <TableHead>Progress</TableHead>
-                  <TableHead>Accuracy</TableHead>
-                  <TableHead>Started</TableHead>
-                  <TableHead>Duration</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredJobs.map((job) => (
-                  <TableRow key={job.id}>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        {getStatusIcon(job.status)}
-                        {getStatusBadge(job.status)}
-                      </div>
-                    </TableCell>
-                    <TableCell>{getProviderBadge(job.provider)}</TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between text-sm">
-                          <span>
-                            {job.processedCount}/{job.totalCount}
-                          </span>
-                          <span className="text-gray-500">
-                            {Math.round(
-                              (job.processedCount / job.totalCount) * 100,
-                            )}
-                            %
-                          </span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div
-                            className={cn(
-                              "h-2 rounded-full transition-all duration-300",
-                              job.status === "failed"
-                                ? "bg-red-500"
-                                : job.status === "completed"
-                                  ? "bg-green-500"
-                                  : "bg-blue-500",
-                            )}
-                            style={{
-                              width: `${(job.processedCount / job.totalCount) * 100}%`,
-                            }}
-                          />
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <span
-                        className={cn(
-                          "font-medium",
-                          job.accuracy > 95
-                            ? "text-green-600"
-                            : job.accuracy > 90
-                              ? "text-yellow-600"
-                              : "text-red-600",
-                        )}
-                      >
-                        {job.accuracy > 0
-                          ? `${job.accuracy.toFixed(1)}%`
-                          : "N/A"}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-gray-600">
-                      {formatTime(job.startTime)}
-                    </TableCell>
-                    <TableCell className="text-gray-600">
-                      {job.duration ||
-                        (job.status === "running" ? "Running..." : "N/A")}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-
-        {/* Recent Activity Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Additional System Information */}
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
-            <CardHeader>
-              <CardTitle className="font-display">System Health</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-600">
-                  API Response Time
-                </span>
-                <span className="text-sm font-bold text-green-600">142ms</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-600">
-                  Database Connection
-                </span>
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-sm font-medium text-green-600">
-                    Healthy
-                  </span>
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-2">
+                <Users className="h-5 w-5 text-blue-600" />
+                <div>
+                  <p className="text-sm text-gray-600">Active Users</p>
+                  <p className="text-lg font-semibold">8,549</p>
                 </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-600">
-                  Queue Processing
-                </span>
-                <span className="text-sm font-bold text-blue-600">24 jobs</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-600">
-                  Error Rate
-                </span>
-                <span className="text-sm font-bold text-red-600">0.3%</span>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle className="font-display">Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button variant="outline" className="w-full justify-start">
-                <Settings className="mr-2 h-4 w-4" />
-                Configure OCR Settings
-              </Button>
-              <Button variant="outline" className="w-full justify-start">
-                <Eye className="mr-2 h-4 w-4" />
-                View System Logs
-              </Button>
-              <Button variant="outline" className="w-full justify-start">
-                <Users className="mr-2 h-4 w-4" />
-                Manage User Accounts
-              </Button>
-              <Button variant="outline" className="w-full justify-start">
-                <DollarSign className="mr-2 h-4 w-4" />
-                Payment Processing Stats
-              </Button>
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-2">
+                <Zap className="h-5 w-5 text-green-600" />
+                <div>
+                  <p className="text-sm text-gray-600">API Requests</p>
+                  <p className="text-lg font-semibold">125.4K</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-2">
+                <Clock className="h-5 w-5 text-amber-600" />
+                <div>
+                  <p className="text-sm text-gray-600">Avg Response</p>
+                  <p className="text-lg font-semibold">142ms</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-2">
+                <CheckCircle className="h-5 w-5 text-green-600" />
+                <div>
+                  <p className="text-sm text-gray-600">System Health</p>
+                  <p className="text-lg font-semibold">98.2%</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
