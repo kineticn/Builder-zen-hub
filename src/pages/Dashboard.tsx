@@ -127,6 +127,9 @@ interface SmartSuggestion {
   confidence: number;
   source: "plaid" | "gmail" | "pattern";
   lastSeen: string;
+  category?: string;
+  estimatedDueDate?: string;
+  description?: string;
 }
 
 interface ReferralBanner {
@@ -266,6 +269,45 @@ const mockHouseholds: HouseholdContext[] = [
   },
 ];
 
+const mockSmartSuggestions: SmartSuggestion[] = [
+  {
+    id: "sug1",
+    type: "email_bill",
+    name: "Netflix Premium",
+    amount: 15.99,
+    confidence: 0.95,
+    source: "gmail",
+    lastSeen: "2024-03-10",
+    category: "Entertainment",
+    estimatedDueDate: "2024-03-15",
+    description: "Detected from billing email - monthly subscription",
+  },
+  {
+    id: "sug2",
+    type: "recurring_payee",
+    name: "Gym Membership",
+    amount: 45.0,
+    confidence: 0.88,
+    source: "plaid",
+    lastSeen: "2024-03-08",
+    category: "Health & Fitness",
+    estimatedDueDate: "2024-03-12",
+    description: "Recurring transaction pattern detected",
+  },
+  {
+    id: "sug3",
+    type: "subscription",
+    name: "Adobe Creative Cloud",
+    amount: 52.99,
+    confidence: 0.92,
+    source: "pattern",
+    lastSeen: "2024-03-05",
+    category: "Software",
+    estimatedDueDate: "2024-03-20",
+    description: "Software subscription identified from spending pattern",
+  },
+];
+
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const shouldReduceMotion = useReducedMotion();
@@ -280,6 +322,9 @@ const Dashboard: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [cashflowDate, setCashflowDate] = useState(new Date());
   const [isLoading, setIsLoading] = useState(false);
+  const [smartSuggestions, setSmartSuggestions] =
+    useState<SmartSuggestion[]>(mockSmartSuggestions);
+  const [showSuccessToast, setShowSuccessToast] = useState<string | null>(null);
 
   // Filter bills by selected household
   const filteredBills = bills.filter(
@@ -398,6 +443,54 @@ const Dashboard: React.FC = () => {
       month: "short",
       day: "numeric",
     });
+  };
+
+  // Smart suggestion handlers
+  const handleConfirmSuggestion = (suggestion: SmartSuggestion) => {
+    const newBill: Bill = {
+      id: `bill_${Date.now()}`,
+      billerName: suggestion.name,
+      amount: suggestion.amount || 0,
+      dueDate:
+        suggestion.estimatedDueDate ||
+        new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split("T")[0],
+      status: "upcoming",
+      category: suggestion.category || "Other",
+      isRecurring: true,
+      householdId: selectedHousehold.id,
+    };
+
+    setBills((prev) => [...prev, newBill]);
+    setSmartSuggestions((prev) => prev.filter((s) => s.id !== suggestion.id));
+    setShowSuccessToast(`${suggestion.name} added to your bills!`);
+
+    // Auto-hide success toast
+    setTimeout(() => setShowSuccessToast(null), 3000);
+  };
+
+  const handleDismissSuggestion = (suggestionId: string) => {
+    setSmartSuggestions((prev) => prev.filter((s) => s.id !== suggestionId));
+  };
+
+  const getSourceIcon = (source: SmartSuggestion["source"]) => {
+    switch (source) {
+      case "plaid":
+        return <CreditCard className="h-4 w-4 text-blue-600" />;
+      case "gmail":
+        return <Mail className="h-4 w-4 text-red-600" />;
+      case "pattern":
+        return <Brain className="h-4 w-4 text-purple-600" />;
+      default:
+        return <Lightbulb className="h-4 w-4 text-amber-600" />;
+    }
+  };
+
+  const getConfidenceColor = (confidence: number) => {
+    if (confidence >= 0.9) return "text-green-600 bg-green-100";
+    if (confidence >= 0.8) return "text-amber-600 bg-amber-100";
+    return "text-gray-600 bg-gray-100";
   };
 
   return (
@@ -525,28 +618,300 @@ const Dashboard: React.FC = () => {
         {/* List View */}
         {currentView === "list" && (
           <div className="space-y-6">
+            {/* Smart Suggestions Card */}
+            <AnimatePresence>
+              {smartSuggestions.length > 0 && (
+                <motion.div
+                  initial={shouldReduceMotion ? {} : { opacity: 0, y: -20 }}
+                  animate={shouldReduceMotion ? {} : { opacity: 1, y: 0 }}
+                  exit={
+                    shouldReduceMotion ? {} : { opacity: 0, y: -20, height: 0 }
+                  }
+                  transition={{ duration: shouldReduceMotion ? 0 : 0.3 }}
+                  className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-xl p-6"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                        <Sparkles className="h-4 w-4 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">
+                          Smart Bill Discovery
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          AI found {smartSuggestions.length} potential bills
+                        </p>
+                      </div>
+                    </div>
+                    <Badge className="bg-blue-100 text-blue-700 border-blue-200">
+                      AI Powered
+                    </Badge>
+                  </div>
+
+                  <div className="space-y-3">
+                    {smartSuggestions.slice(0, 3).map((suggestion) => (
+                      <motion.div
+                        key={suggestion.id}
+                        initial={
+                          shouldReduceMotion ? {} : { opacity: 0, x: -20 }
+                        }
+                        animate={shouldReduceMotion ? {} : { opacity: 1, x: 0 }}
+                        exit={shouldReduceMotion ? {} : { opacity: 0, x: 20 }}
+                        className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3 flex-1">
+                            <div className="flex items-center space-x-2">
+                              {getSourceIcon(suggestion.source)}
+                              <div className="w-2 h-2 bg-green-400 rounded-full" />
+                            </div>
+
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-2">
+                                <h4 className="font-medium text-gray-900">
+                                  {suggestion.name}
+                                </h4>
+                                <Badge
+                                  variant="outline"
+                                  className={cn(
+                                    "text-xs",
+                                    getConfidenceColor(suggestion.confidence),
+                                  )}
+                                >
+                                  {Math.round(suggestion.confidence * 100)}%
+                                  match
+                                </Badge>
+                              </div>
+
+                              <div className="flex items-center space-x-4 mt-1">
+                                <span className="text-lg font-semibold text-gray-900">
+                                  {formatCurrency(suggestion.amount || 0)}
+                                </span>
+                                <span className="text-sm text-gray-500">
+                                  {suggestion.category}
+                                </span>
+                                {suggestion.estimatedDueDate && (
+                                  <span className="text-sm text-blue-600">
+                                    Due{" "}
+                                    {formatDate(
+                                      new Date(suggestion.estimatedDueDate),
+                                    )}
+                                  </span>
+                                )}
+                              </div>
+
+                              <p className="text-xs text-gray-500 mt-1">
+                                {suggestion.description}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                handleDismissSuggestion(suggestion.id)
+                              }
+                              className="text-gray-500 hover:text-gray-700"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() =>
+                                handleConfirmSuggestion(suggestion)
+                              }
+                              className="bg-teal-600 hover:bg-teal-700 text-white"
+                            >
+                              <CheckCircle className="h-4 w-4 mr-1" />
+                              Confirm
+                            </Button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  {smartSuggestions.length > 3 && (
+                    <div className="mt-3 text-center">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-blue-600"
+                      >
+                        View {smartSuggestions.length - 3} more suggestions
+                        <ArrowRight className="h-4 w-4 ml-1" />
+                      </Button>
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Success Toast */}
+            <AnimatePresence>
+              {showSuccessToast && (
+                <motion.div
+                  initial={shouldReduceMotion ? {} : { opacity: 0, y: -50 }}
+                  animate={shouldReduceMotion ? {} : { opacity: 1, y: 0 }}
+                  exit={shouldReduceMotion ? {} : { opacity: 0, y: -50 }}
+                  className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2"
+                >
+                  <CheckCircle className="h-5 w-5" />
+                  <span className="font-medium">{showSuccessToast}</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Bills Header */}
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">
-                Bills Overview
-              </h2>
-              <Button variant="outline" size="sm">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Bill
-              </Button>
+              <div className="flex items-center space-x-3">
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Bills Overview
+                </h2>
+                {filteredBills.length > 0 && (
+                  <Badge variant="outline" className="text-xs">
+                    {filteredBills.filter((b) => b.status !== "paid").length}{" "}
+                    active
+                  </Badge>
+                )}
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button variant="ghost" size="sm" className="text-gray-600">
+                  <BarChart3 className="h-4 w-4 mr-1" />
+                  Insights
+                </Button>
+                <Button variant="outline" size="sm">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Bill
+                </Button>
+              </div>
             </div>
 
+            {/* Quick Actions */}
+            {filteredBills.some((bill) => bill.status === "overdue") && (
+              <motion.div
+                initial={shouldReduceMotion ? {} : { opacity: 0, scale: 0.95 }}
+                animate={shouldReduceMotion ? {} : { opacity: 1, scale: 1 }}
+                className="bg-red-50 border border-red-200 rounded-lg p-4"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <AlertCircle className="h-5 w-5 text-red-600" />
+                    <div>
+                      <h3 className="font-medium text-red-900">
+                        Overdue Bills
+                      </h3>
+                      <p className="text-sm text-red-700">
+                        {
+                          filteredBills.filter((b) => b.status === "overdue")
+                            .length
+                        }{" "}
+                        bills need immediate attention
+                      </p>
+                    </div>
+                  </div>
+                  <Button size="sm" className="bg-red-600 hover:bg-red-700">
+                    Pay Now
+                  </Button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Bills List */}
             <div className="space-y-4">
-              {filteredBills.map((bill) => (
-                <BillTile
-                  key={bill.id}
-                  bill={bill}
-                  onClick={() => navigate(`/bill/${bill.id}`)}
-                />
-              ))}
+              {filteredBills.length === 0 ? (
+                <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <FileText className="h-8 w-8 text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    No bills yet
+                  </h3>
+                  <p className="text-gray-600 mb-6">
+                    Add your first bill or connect your bank account to get
+                    started
+                  </p>
+                  <div className="flex items-center justify-center space-x-3">
+                    <Button>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Bill
+                    </Button>
+                    <Button variant="outline">
+                      <CreditCard className="h-4 w-4 mr-2" />
+                      Connect Bank
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                filteredBills.map((bill) => (
+                  <BillTile
+                    key={bill.id}
+                    bill={bill}
+                    onClick={() => navigate(`/bill/${bill.id}`)}
+                  />
+                ))
+              )}
             </div>
+
+            {/* Bill Categories Summary */}
+            {filteredBills.length > 0 && (
+              <motion.div
+                initial={shouldReduceMotion ? {} : { opacity: 0, y: 20 }}
+                animate={shouldReduceMotion ? {} : { opacity: 1, y: 0 }}
+                transition={{ delay: shouldReduceMotion ? 0 : 0.2 }}
+                className="bg-white rounded-lg border border-gray-200 p-6"
+              >
+                <h3 className="font-semibold text-gray-900 mb-4">
+                  Monthly Overview
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {[
+                    {
+                      label: "Total Bills",
+                      value: filteredBills.length,
+                      icon: <FileText className="h-4 w-4" />,
+                    },
+                    {
+                      label: "This Month",
+                      value: formatCurrency(
+                        filteredBills.reduce(
+                          (sum, bill) => sum + bill.amount,
+                          0,
+                        ),
+                      ),
+                      icon: <DollarSign className="h-4 w-4" />,
+                    },
+                    {
+                      label: "Due Soon",
+                      value: filteredBills.filter(
+                        (b) => b.status === "due-soon",
+                      ).length,
+                      icon: <Clock className="h-4 w-4" />,
+                    },
+                    {
+                      label: "On Auto-Pay",
+                      value: Math.floor(filteredBills.length * 0.6),
+                      icon: <Zap className="h-4 w-4" />,
+                    },
+                  ].map((stat, index) => (
+                    <div key={index} className="text-center">
+                      <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2 text-gray-600">
+                        {stat.icon}
+                      </div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {stat.value}
+                      </div>
+                      <div className="text-xs text-gray-500">{stat.label}</div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
           </div>
         )}
-
         {/* Calendar View */}
         {currentView === "calendar" && (
           <div className="space-y-6">
