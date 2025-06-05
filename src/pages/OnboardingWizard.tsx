@@ -32,7 +32,7 @@ import {
   Lightbulb,
   Building2,
   Loader2,
-  Bank,
+  Landmark,
   Link,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -177,7 +177,7 @@ const legalAgreements: LegalAgreement[] = [
 
 const tips: Tip[] = [
   {
-    icon: <Bank className="h-5 w-5" />,
+    icon: <Landmark className="h-5 w-5" />,
     title: "Just Link Your Bank",
     description:
       "Connect your account and we'll find 95%+ of your bills automatically",
@@ -641,7 +641,7 @@ const WelcomeStep: React.FC<{
           >
             <div className="flex items-center space-x-4">
               <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center group-hover:bg-emerald-200 transition-colors">
-                <Bank className="h-6 w-6 text-emerald-600" />
+                <Landmark className="h-6 w-6 text-emerald-600" />
               </div>
               <div className="flex-1 text-left">
                 <div className="flex items-center space-x-2">
@@ -1461,7 +1461,7 @@ const PlaidConnectionStep: React.FC<{
       <div className="max-w-2xl mx-auto w-full space-y-6 flex-1 flex flex-col justify-center">
         <motion.div className="text-center space-y-4" {...motionProps}>
           <div className="flex items-center justify-center space-x-2">
-            <Bank className="h-8 w-8 text-teal-600" />
+            <Landmark className="h-8 w-8 text-teal-600" />
             <h2 className="text-2xl font-bold text-navy-900 font-display">
               {state.quickStartMethod === "plaid"
                 ? "Connect Your Bank"
