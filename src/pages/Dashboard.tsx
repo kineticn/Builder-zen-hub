@@ -496,7 +496,8 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20" style={{ opacity: 1, visibility: 'visible' }}>
+    <div
+      className="min-h-screen bg-gray-50 pb-20"
       style={{ opacity: 1, visibility: "visible" }}
     >
       {/* Header */}
@@ -615,7 +616,7 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <div className="p-6 pb-24" style={{ opacity: 1, visibility: 'visible' }}>
+      <div className="p-6 pb-24" style={{ opacity: 1, visibility: "visible" }}>
         {/* List View */}
         {currentView === "list" && (
           <div className="space-y-6">
