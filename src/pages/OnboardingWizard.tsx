@@ -489,9 +489,15 @@ const OnboardingWizard: React.FC = () => {
       };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    <div
+      className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50"
+      style={{ opacity: 1 }}
+    >
       {/* Progress bar */}
-      <div className="sticky top-0 z-50 bg-white border-b border-gray-200">
+      <div
+        className="sticky top-0 z-50 bg-white border-b border-gray-200"
+        style={{ opacity: 1 }}
+      >
         <div className="max-w-4xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center space-x-3">
@@ -525,7 +531,12 @@ const OnboardingWizard: React.FC = () => {
 
       {/* Main content */}
       <AnimatePresence mode="wait">
-        <motion.div key={state.step} className="flex-1" {...motionProps}>
+        <motion.div
+          key={state.step}
+          className="flex-1"
+          style={{ opacity: 1 }} // Fallback to ensure visibility
+          {...motionProps}
+        >
           {getCurrentStepComponent()}
         </motion.div>
       </AnimatePresence>
