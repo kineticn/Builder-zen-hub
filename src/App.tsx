@@ -41,6 +41,7 @@ const App = () => (
                 element={<LegalComplianceAdmin />}
               />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/profile/edit" element={<ProfileEditPage />} />
               <Route path="/activity" element={<ActivityPage />} />
               <Route path="/offers" element={<OffersPage />} />
               <Route path="*" element={<NotFound />} />
