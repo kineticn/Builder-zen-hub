@@ -225,8 +225,10 @@ const ActivityPage: React.FC = () => {
   };
 
   const handleTransactionClick = (transaction: Transaction) => {
-    // TODO: Navigate to transaction detail page
-    console.log("View transaction:", transaction.id);
+    // Show transaction details in a modal or navigate to detail page
+    alert(
+      `Transaction Details:\n\nID: ${transaction.id}\nAmount: ${formatCurrency(transaction.amount)}\nPayee: ${transaction.payee}\nDate: ${formatDate(transaction.date)}\nStatus: ${transaction.status}${transaction.confirmationNumber ? `\nConfirmation: ${transaction.confirmationNumber}` : ""}`,
+    );
   };
 
   const getTransactionIcon = (type: Transaction["type"]) => {
