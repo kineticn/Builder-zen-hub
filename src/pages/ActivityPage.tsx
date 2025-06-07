@@ -291,6 +291,12 @@ const ActivityPage: React.FC = () => {
   };
 
   const filteredTransactions = mockTransactions.filter((transaction) => {
+    const transactionDate = new Date(transaction.date);
+    const now = new Date();
+    const daysAgo = new Date(
+      now.getTime() - parseInt(selectedPeriod) * 24 * 60 * 60 * 1000,
+    );
+
     const matchesSearch =
       transaction.description
         .toLowerCase()
@@ -300,8 +306,33 @@ const ActivityPage: React.FC = () => {
     const matchesFilter =
       selectedFilter === "all" || transaction.type === selectedFilter;
 
-    return matchesSearch && matchesFilter;
+    const matchesPeriod = transactionDate >= daysAgo;
+
+    return matchesSearch && matchesFilter && matchesPeriod;
   });
+
+  // Calculate filtered statistics
+  const filteredSummary = {
+    totalSpent: filteredTransactions
+      .filter((t) => t.amount < 0)
+      .reduce((sum, t) => sum + Math.abs(t.amount), 0),
+    totalIncome: filteredTransactions
+      .filter((t) => t.amount > 0)
+      .reduce((sum, t) => sum + t.amount, 0),
+    billsPaid: filteredTransactions.filter(
+      (t) => t.status === "completed" && t.amount < 0,
+    ).length,
+    pendingPayments: filteredTransactions.filter((t) => t.status === "pending")
+      .length,
+    period:
+      selectedPeriod === "7"
+        ? "Last 7 days"
+        : selectedPeriod === "30"
+          ? "Last 30 days"
+          : selectedPeriod === "90"
+            ? "Last 90 days"
+            : "Last year",
+  };
 
   return (
     <div
