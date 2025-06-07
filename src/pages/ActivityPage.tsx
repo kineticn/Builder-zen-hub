@@ -558,18 +558,37 @@ const ActivityPage: React.FC = () => {
                             View Details
                           </DropdownMenuItem>
                           <DropdownMenuItem
-                            onClick={() =>
-                              console.log("Download receipt:", transaction.id)
-                            }
+                            onClick={() => {
+                              // Generate a simple receipt download
+                              const receiptContent = `BillBuddy Receipt\n\nTransaction ID: ${transaction.id}\nDate: ${formatDate(transaction.date)}\nPayee: ${transaction.payee}\nDescription: ${transaction.description}\nAmount: ${formatCurrency(transaction.amount)}\nStatus: ${transaction.status}\n${transaction.confirmationNumber ? `Confirmation: ${transaction.confirmationNumber}\n` : ""}Category: ${transaction.category}\nAccount: ${transaction.accountLast4 ? `****${transaction.accountLast4}` : "N/A"}\n\nThank you for using BillBuddy!`;
+
+                              const blob = new Blob([receiptContent], {
+                                type: "text/plain;charset=utf-8;",
+                              });
+                              const link = document.createElement("a");
+                              const url = URL.createObjectURL(blob);
+                              link.setAttribute("href", url);
+                              link.setAttribute(
+                                "download",
+                                `receipt-${transaction.id}.txt`,
+                              );
+                              link.style.visibility = "hidden";
+                              document.body.appendChild(link);
+                              link.click();
+                              document.body.removeChild(link);
+                            }}
                           >
                             <Download className="mr-2 h-4 w-4" />
                             Download Receipt
                           </DropdownMenuItem>
                           {transaction.status === "failed" && (
                             <DropdownMenuItem
-                              onClick={() =>
-                                console.log("Retry payment:", transaction.id)
-                              }
+                              onClick={() => {
+                                // In a real app, this would retry the payment
+                                alert(
+                                  `Retrying payment for ${transaction.description}.\n\nThis would redirect to the payment flow to complete the transaction.`,
+                                );
+                              }}
                             >
                               <RefreshCw className="mr-2 h-4 w-4" />
                               Retry Payment
