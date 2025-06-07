@@ -609,7 +609,11 @@ const ActivityPage: React.FC = () => {
           <div className="text-center">
             <Button
               variant="outline"
-              onClick={() => console.log("Load more transactions")}
+              onClick={() => {
+                alert(
+                  "Load more functionality would fetch additional transactions from the server.\n\nIn a real app, this would load older transactions with pagination.",
+                );
+              }}
             >
               Load More Transactions
             </Button>
