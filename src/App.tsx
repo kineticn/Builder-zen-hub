@@ -25,7 +25,8 @@ const App = () => (
         <BrowserRouter>
           <div style={{ opacity: 1, minHeight: "100vh" }}>
             <Routes>
-              <Route path="/" element={<Index />} />
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/app" element={<Index />} />
               <Route path="/onboarding" element={<OnboardingWizard />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/bill/:id" element={<BillDetail />} />
