@@ -72,8 +72,35 @@ const Settings: React.FC = () => {
   };
 
   const handleExportData = () => {
-    // Trigger data export
-    console.log("Exporting user data...");
+    // Generate user data export
+    const userData = {
+      profile: {
+        name: userInfo.name,
+        email: userInfo.email,
+        plan: userInfo.plan,
+        exportDate: new Date().toISOString(),
+      },
+      settings: {
+        notifications: notifications,
+      },
+      note: "This is a sample data export. In a real app, this would include all user bills, payments, and transaction history.",
+    };
+
+    const dataContent = JSON.stringify(userData, null, 2);
+    const blob = new Blob([dataContent], {
+      type: "application/json;charset=utf-8;",
+    });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      `billbuddy-data-export-${new Date().toISOString().split("T")[0]}.json`,
+    );
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleDeleteAccount = () => {
