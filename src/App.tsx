@@ -7,6 +7,7 @@ import { UserExperienceProvider } from "@/contexts/UserExperienceContext";
 import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
 import OffersPage from "./pages/OffersPage";
+import ActivityPage from "./pages/ActivityPage";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import OnboardingWizard from "./pages/OnboardingWizard";
