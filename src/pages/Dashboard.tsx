@@ -1064,7 +1064,10 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Floating Action Button */}
-      <FloatingActionButton />
+      <FloatingActionButton
+        onClick={() => navigate("/add-bill")}
+        aria-label="Add new bill"
+      />
 
       {/* Bottom Navigation */}
       <BottomNavBar />
