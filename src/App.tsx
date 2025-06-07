@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { UserExperienceProvider } from "@/contexts/UserExperienceContext";
 import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
+import OffersPage from "./pages/OffersPage";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import OnboardingWizard from "./pages/OnboardingWizard";
