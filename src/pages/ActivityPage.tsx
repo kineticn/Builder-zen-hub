@@ -369,28 +369,35 @@ const ActivityPage: React.FC = () => {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="text-center">
             <div className="text-2xl font-bold text-teal-400">
-              {formatCurrency(mockSummary.totalSpent)}
+              {formatCurrency(filteredSummary.totalSpent)}
             </div>
             <div className="text-xs opacity-80">Total Spent</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-green-400">
-              {formatCurrency(mockSummary.totalIncome)}
+              {formatCurrency(filteredSummary.totalIncome)}
             </div>
             <div className="text-xs opacity-80">Income & Refunds</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-blue-400">
-              {mockSummary.billsPaid}
+              {filteredSummary.billsPaid}
             </div>
             <div className="text-xs opacity-80">Bills Paid</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-amber-400">
-              {mockSummary.pendingPayments}
+              {filteredSummary.pendingPayments}
             </div>
             <div className="text-xs opacity-80">Pending</div>
           </div>
+        </div>
+
+        {/* Period indicator */}
+        <div className="text-center mt-4">
+          <p className="text-sm text-navy-200">
+            Showing results for {filteredSummary.period}
+          </p>
         </div>
       </header>
 
