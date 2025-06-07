@@ -20,6 +20,9 @@ interface LineChartProps {
   className?: string;
   color?: string;
   strokeWidth?: number;
+  height?: number;
+  showGrid?: boolean;
+  showTooltip?: boolean;
 }
 
 export const LineChart: React.FC<LineChartProps> = ({
