@@ -67,31 +67,6 @@ export const BillTile: React.FC<BillTileProps> = ({
   onDelete,
   className,
 }) => {
-  // Default handlers
-  const handlePayNow =
-    onPayNow ||
-    (() => {
-      alert(
-        `Pay Now for ${bill.billerName}\nAmount: ${formatAmount(bill.amount)}\n\nThis would redirect to the payment flow.`,
-      );
-    });
-
-  const handleViewDetails =
-    onViewDetails ||
-    onClick ||
-    (() => {
-      alert(
-        `Bill Details for ${bill.billerName}\nAmount: ${formatAmount(bill.amount)}\nDue: ${formatDate(bill.dueDate)}\nStatus: ${getStatusLabel(bill.status)}`,
-      );
-    });
-
-  const handleDelete =
-    onDelete ||
-    (() => {
-      if (confirm(`Are you sure you want to delete ${bill.billerName}?`)) {
-        alert(`${bill.billerName} would be deleted from your bills.`);
-      }
-    });
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const formatDate = (dateString: string) => {
@@ -108,6 +83,33 @@ export const BillTile: React.FC<BillTileProps> = ({
       currency: "USD",
     }).format(amount);
   };
+
+  // Default handlers
+  const handlePayNow =
+    onPayNow ||
+    (() => {
+      alert(
+        `Pay Now for ${bill.billerName}\nAmount: ${formatAmount(bill.amount)}\n\nThis would redirect to the payment flow.`,
+      );
+    });
+
+  const handleViewDetails = onViewDetails
+    ? () => onViewDetails(bill.id)
+    : onClick
+      ? () => onClick(bill)
+      : () => {
+          alert(
+            `Bill Details for ${bill.billerName}\nAmount: ${formatAmount(bill.amount)}\nDue: ${formatDate(bill.dueDate)}\nStatus: ${getStatusLabel(bill.status)}`,
+          );
+        };
+
+  const handleDelete =
+    onDelete ||
+    (() => {
+      if (confirm(`Are you sure you want to delete ${bill.billerName}?`)) {
+        alert(`${bill.billerName} would be deleted from your bills.`);
+      }
+    });
 
   return (
     <div
@@ -162,7 +164,7 @@ export const BillTile: React.FC<BillTileProps> = ({
               <span>Pay Now</span>
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => handleViewDetails(bill)}
+              onClick={handleViewDetails}
               className="flex items-center space-x-2"
             >
               <Eye className="h-4 w-4" />
