@@ -27,6 +27,7 @@ const App = () => (
           <div style={{ opacity: 1, minHeight: "100vh" }}>
             <Routes>
               <Route path="/" element={<LandingPage />} />
+              <Route path="/login" element={<LoginPage />} />
               <Route path="/app" element={<Index />} />
               <Route path="/onboarding" element={<OnboardingWizard />} />
               <Route path="/dashboard" element={<Dashboard />} />
