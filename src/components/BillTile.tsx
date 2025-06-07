@@ -22,9 +22,10 @@ interface Bill {
 
 interface BillTileProps {
   bill: Bill;
-  onPayNow: (billId: string) => void;
-  onViewDetails: (billId: string) => void;
-  onDelete: (billId: string) => void;
+  onClick?: (bill: Bill) => void;
+  onPayNow?: (billId: string) => void;
+  onViewDetails?: (billId: string) => void;
+  onDelete?: (billId: string) => void;
   className?: string;
 }
 
