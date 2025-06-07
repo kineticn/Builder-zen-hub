@@ -40,7 +40,7 @@ const App = () => (
               />
               <Route path="/settings" element={<Settings />} />
               <Route path="/activity" element={<Dashboard />} />
-              <Route path="/offers" element={<Dashboard />} />
+              <Route path="/offers" element={<OffersPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </div>
