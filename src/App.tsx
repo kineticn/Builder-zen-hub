@@ -22,6 +22,11 @@ import AddBillPage from "./pages/AddBillPage";
 
 const queryClient = new QueryClient();
 
+// Initialize console filtering for development
+if (process.env.NODE_ENV === "development") {
+  initConsoleFilter();
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <UserExperienceProvider>
