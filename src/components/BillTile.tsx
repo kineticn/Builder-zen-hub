@@ -61,11 +61,37 @@ const getStatusLabel = (status: Bill["status"]) => {
 
 export const BillTile: React.FC<BillTileProps> = ({
   bill,
+  onClick,
   onPayNow,
   onViewDetails,
   onDelete,
   className,
 }) => {
+  // Default handlers
+  const handlePayNow =
+    onPayNow ||
+    (() => {
+      alert(
+        `Pay Now for ${bill.billerName}\nAmount: ${formatAmount(bill.amount)}\n\nThis would redirect to the payment flow.`,
+      );
+    });
+
+  const handleViewDetails =
+    onViewDetails ||
+    onClick ||
+    (() => {
+      alert(
+        `Bill Details for ${bill.billerName}\nAmount: ${formatAmount(bill.amount)}\nDue: ${formatDate(bill.dueDate)}\nStatus: ${getStatusLabel(bill.status)}`,
+      );
+    });
+
+  const handleDelete =
+    onDelete ||
+    (() => {
+      if (confirm(`Are you sure you want to delete ${bill.billerName}?`)) {
+        alert(`${bill.billerName} would be deleted from your bills.`);
+      }
+    });
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const formatDate = (dateString: string) => {
