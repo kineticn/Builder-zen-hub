@@ -16,6 +16,7 @@ import BillDetail from "./pages/BillDetail";
 import AdminDashboard from "./pages/AdminDashboard";
 import LegalComplianceAdmin from "./pages/LegalComplianceAdmin";
 import Settings from "./pages/Settings";
+import ProfileEditPage from "./pages/ProfileEditPage";
 
 const queryClient = new QueryClient();
 
