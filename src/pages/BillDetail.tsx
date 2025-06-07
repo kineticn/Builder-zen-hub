@@ -124,8 +124,10 @@ const BillDetail: React.FC = () => {
   };
 
   const handlePayNow = () => {
-    // Navigate to payment flow
-    console.log("Paying bill:", id);
+    // In a real app, this would navigate to a payment flow page
+    alert(
+      `Initiating payment for ${mockBill.billerName}\n\nAmount: ${formatAmount(mockBill.amount)}\nDue: ${formatDate(mockBill.dueDate)}\n\nThis would redirect to the secure payment flow where you can select your payment method and complete the transaction.`,
+    );
   };
 
   const handleToggleAutopay = (enabled: boolean) => {
