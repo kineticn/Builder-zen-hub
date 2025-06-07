@@ -54,6 +54,19 @@ const App = () => (
               />
               <Route path="/settings" element={<Settings />} />
               <Route path="/profile/edit" element={<ProfileEditPage />} />
+              <Route
+                path="/household/manage"
+                element={<HouseholdManagementPage />}
+              />
+              <Route
+                path="/household/create"
+                element={<CreateHouseholdPage />}
+              />
+              <Route
+                path="/household/:householdId/invite"
+                element={<InviteUserPage />}
+              />
+              <Route path="/household/join" element={<JoinHouseholdPage />} />
               <Route path="/activity" element={<ActivityPage />} />
               <Route path="/offers" element={<OffersPage />} />
               <Route path="*" element={<NotFound />} />
