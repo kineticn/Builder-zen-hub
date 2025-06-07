@@ -19,6 +19,10 @@ import LegalComplianceAdmin from "./pages/LegalComplianceAdmin";
 import Settings from "./pages/Settings";
 import ProfileEditPage from "./pages/ProfileEditPage";
 import AddBillPage from "./pages/AddBillPage";
+import HouseholdManagementPage from "./pages/HouseholdManagementPage";
+import CreateHouseholdPage from "./pages/CreateHouseholdPage";
+import InviteUserPage from "./pages/InviteUserPage";
+import JoinHouseholdPage from "./pages/JoinHouseholdPage";
 
 const queryClient = new QueryClient();
 
