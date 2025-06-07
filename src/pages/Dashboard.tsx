@@ -702,7 +702,23 @@ const Dashboard: React.FC = () => {
                   </p>
                 </div>
               </div>
-              <Button size="sm" className="bg-red-600 hover:bg-red-700">
+              <Button
+                size="sm"
+                className="bg-red-600 hover:bg-red-700"
+                onClick={() => {
+                  const overdueBills = filteredBills.filter(
+                    (b) => b.status === "overdue",
+                  );
+                  if (overdueBills.length === 1) {
+                    navigate(`/bill/${overdueBills[0].id}`);
+                  } else {
+                    // Navigate to a filtered view of overdue bills
+                    alert(
+                      `You have ${overdueBills.length} overdue bills:\n\n${overdueBills.map((b) => `• ${b.billerName}: ${formatCurrency(b.amount)}`).join("\n")}\n\nClick on individual bills to pay them.`,
+                    );
+                  }
+                }}
+              >
                 Pay Now
               </Button>
             </div>
