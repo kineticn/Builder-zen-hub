@@ -195,8 +195,33 @@ const ActivityPage: React.FC = () => {
   };
 
   const handleExport = () => {
-    // TODO: Implement export functionality
-    console.log("Exporting transactions...");
+    const csvContent = [
+      "Date,Description,Payee,Category,Amount,Status,Confirmation Number",
+      ...filteredTransactions.map((transaction) =>
+        [
+          new Date(transaction.date).toLocaleDateString(),
+          `"${transaction.description}"`,
+          `"${transaction.payee}"`,
+          transaction.category,
+          transaction.amount,
+          transaction.status,
+          transaction.confirmationNumber || "",
+        ].join(","),
+      ),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      `billbuddy-transactions-${new Date().toISOString().split("T")[0]}.csv`,
+    );
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleTransactionClick = (transaction: Transaction) => {
