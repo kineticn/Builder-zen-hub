@@ -155,21 +155,21 @@ export const BillTile: React.FC<BillTileProps> = ({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem
-              onClick={() => onPayNow(bill.id)}
+              onClick={() => handlePayNow(bill.id)}
               className="flex items-center space-x-2"
             >
               <CreditCard className="h-4 w-4" />
               <span>Pay Now</span>
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => onViewDetails(bill.id)}
+              onClick={() => handleViewDetails(bill)}
               className="flex items-center space-x-2"
             >
               <Eye className="h-4 w-4" />
               <span>View Details</span>
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => onDelete(bill.id)}
+              onClick={() => handleDelete(bill.id)}
               className="flex items-center space-x-2 text-red-600 focus:text-red-600"
             >
               <Trash2 className="h-4 w-4" />
