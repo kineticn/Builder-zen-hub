@@ -30,9 +30,14 @@ export const LineChart: React.FC<LineChartProps> = ({
   className,
   color = "#00C2B2",
   strokeWidth = 2,
+  height = 256,
+  showGrid = true,
+  showTooltip = true,
 }) => {
+  const chartHeight = `${height}px`;
+
   return (
-    <div className={cn("w-full h-64", className)}>
+    <div className={cn("w-full", className)} style={{ height: chartHeight }}>
       <ResponsiveContainer width="100%" height="100%">
         <RechartsLineChart
           data={data}
@@ -43,11 +48,14 @@ export const LineChart: React.FC<LineChartProps> = ({
             bottom: 0,
           }}
         >
-          <CartesianGrid
-            strokeDasharray="3 3"
-            stroke="#f0f0f0"
-            vertical={false}
-          />
+          {showGrid && (
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="#f0f0f0"
+              vertical={false}
+              horizontal={true}
+            />
+          )}
           <XAxis
             dataKey="month"
             axisLine={false}
@@ -59,6 +67,7 @@ export const LineChart: React.FC<LineChartProps> = ({
             allowDataOverflow={false}
             allowDecimals={false}
             allowDuplicatedCategory={false}
+            interval={0}
           />
           <YAxis
             axisLine={false}
@@ -71,18 +80,22 @@ export const LineChart: React.FC<LineChartProps> = ({
             allowDataOverflow={false}
             allowDecimals={true}
             allowDuplicatedCategory={false}
-            domain={["auto", "auto"]}
+            domain={["dataMin - 10", "dataMax + 10"]}
+            width={60}
           />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: "white",
-              border: "1px solid #e5e7eb",
-              borderRadius: "8px",
-              boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-            }}
-            formatter={(value: number) => [`$${value.toFixed(2)}`, "Amount"]}
-            labelStyle={{ color: "#374151" }}
-          />
+          {showTooltip && (
+            <Tooltip
+              contentStyle={{
+                backgroundColor: "white",
+                border: "1px solid #e5e7eb",
+                borderRadius: "8px",
+                boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+              }}
+              formatter={(value: number) => [`$${value.toFixed(2)}`, "Amount"]}
+              labelStyle={{ color: "#374151" }}
+              cursor={{ stroke: color, strokeWidth: 1, strokeDasharray: "3 3" }}
+            />
+          )}
           <Line
             type="monotone"
             dataKey="amount"
@@ -99,6 +112,9 @@ export const LineChart: React.FC<LineChartProps> = ({
               strokeWidth: 2,
               fill: "white",
             }}
+            connectNulls={false}
+            isAnimationActive={true}
+            animationDuration={750}
           />
         </RechartsLineChart>
       </ResponsiveContainer>
