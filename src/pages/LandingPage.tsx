@@ -309,6 +309,263 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
+      {/* Pricing Section */}
+      <section id="pricing" className="py-20 sm:py-32">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-2xl text-center mb-16">
+            <h2
+              className="mb-4 text-3xl font-bold tracking-tight sm:text-4xl"
+              style={{ color: tokens.colors.primary.navy[900] }}
+            >
+              Simple, transparent pricing
+            </h2>
+            <p className="text-lg text-gray-600">
+              Choose the plan that works best for your household needs
+            </p>
+          </div>
+
+          <div className="grid gap-8 lg:grid-cols-3 lg:gap-6">
+            {/* Starter Plan */}
+            <motion.div
+              initial={shouldReduceMotion ? {} : { opacity: 0, y: 20 }}
+              whileInView={shouldReduceMotion ? {} : { opacity: 1, y: 0 }}
+              transition={{ duration: shouldReduceMotion ? 0 : 0.5 }}
+              viewport={{ once: true }}
+            >
+              <Card className="relative h-full p-6 border-2 hover:shadow-lg transition-shadow">
+                <CardContent className="p-0">
+                  <div className="text-center mb-6">
+                    <h3
+                      className="text-xl font-semibold mb-2"
+                      style={{ color: tokens.colors.primary.navy[900] }}
+                    >
+                      Starter
+                    </h3>
+                    <div className="mb-4">
+                      <span
+                        className="text-4xl font-bold"
+                        style={{ color: tokens.colors.primary.navy[900] }}
+                      >
+                        Free
+                      </span>
+                    </div>
+                    <p className="text-gray-600">Perfect for getting started</p>
+                  </div>
+
+                  <ul className="space-y-3 mb-8">
+                    {[
+                      "Up to 10 bills",
+                      "Basic dashboard",
+                      "Mobile app access",
+                      "Email reminders",
+                      "1 household",
+                    ].map((feature, index) => (
+                      <li key={index} className="flex items-center">
+                        <CheckCircle className="h-4 w-4 text-green-500 mr-3 flex-shrink-0" />
+                        <span className="text-sm text-gray-700">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <Button
+                    className="w-full"
+                    variant="outline"
+                    onClick={handleGetStarted}
+                  >
+                    Get Started Free
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Pro Plan */}
+            <motion.div
+              initial={shouldReduceMotion ? {} : { opacity: 0, y: 20 }}
+              whileInView={shouldReduceMotion ? {} : { opacity: 1, y: 0 }}
+              transition={{
+                duration: shouldReduceMotion ? 0 : 0.5,
+                delay: shouldReduceMotion ? 0 : 0.1,
+              }}
+              viewport={{ once: true }}
+            >
+              <Card
+                className="relative h-full p-6 border-2 hover:shadow-lg transition-shadow"
+                style={{ borderColor: tokens.colors.primary.teal[400] }}
+              >
+                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                  <Badge
+                    className="px-3 py-1 text-xs font-medium"
+                    style={{
+                      backgroundColor: tokens.colors.primary.teal[400],
+                      color: tokens.colors.primary.navy[900],
+                    }}
+                  >
+                    Most Popular
+                  </Badge>
+                </div>
+                <CardContent className="p-0">
+                  <div className="text-center mb-6">
+                    <h3
+                      className="text-xl font-semibold mb-2"
+                      style={{ color: tokens.colors.primary.navy[900] }}
+                    >
+                      Pro
+                    </h3>
+                    <div className="mb-4">
+                      <span
+                        className="text-4xl font-bold"
+                        style={{ color: tokens.colors.primary.navy[900] }}
+                      >
+                        $9.99
+                      </span>
+                      <span className="text-gray-600">/month</span>
+                    </div>
+                    <p className="text-gray-600">
+                      Everything you need to manage bills
+                    </p>
+                  </div>
+
+                  <ul className="space-y-3 mb-8">
+                    {[
+                      "Unlimited bills",
+                      "Multi-view dashboard",
+                      "AI predictions & insights",
+                      "Bank account integration",
+                      "Up to 3 households",
+                      "Calendar & timeline views",
+                      "Smart notifications",
+                      "Priority support",
+                    ].map((feature, index) => (
+                      <li key={index} className="flex items-center">
+                        <CheckCircle className="h-4 w-4 text-green-500 mr-3 flex-shrink-0" />
+                        <span className="text-sm text-gray-700">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <Button
+                    className="w-full font-medium"
+                    onClick={handleGetStarted}
+                    style={{
+                      backgroundColor: tokens.colors.primary.teal[400],
+                      color: tokens.colors.primary.navy[900],
+                    }}
+                  >
+                    Start Free Trial
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Enterprise Plan */}
+            <motion.div
+              initial={shouldReduceMotion ? {} : { opacity: 0, y: 20 }}
+              whileInView={shouldReduceMotion ? {} : { opacity: 1, y: 0 }}
+              transition={{
+                duration: shouldReduceMotion ? 0 : 0.5,
+                delay: shouldReduceMotion ? 0 : 0.2,
+              }}
+              viewport={{ once: true }}
+            >
+              <Card className="relative h-full p-6 border-2 hover:shadow-lg transition-shadow border-gray-900">
+                <CardContent className="p-0">
+                  <div className="text-center mb-6">
+                    <h3
+                      className="text-xl font-semibold mb-2"
+                      style={{ color: tokens.colors.primary.navy[900] }}
+                    >
+                      Enterprise
+                    </h3>
+                    <div className="mb-4">
+                      <span
+                        className="text-4xl font-bold"
+                        style={{ color: tokens.colors.primary.navy[900] }}
+                      >
+                        Custom
+                      </span>
+                    </div>
+                    <p className="text-gray-600">
+                      For large households & businesses
+                    </p>
+                  </div>
+
+                  <ul className="space-y-3 mb-8">
+                    {[
+                      "Everything in Pro",
+                      "Unlimited households",
+                      "Admin dashboard",
+                      "Compliance monitoring",
+                      "Risk management",
+                      "Webhook integrations",
+                      "Custom reporting",
+                      "Dedicated support",
+                      "SSO integration",
+                    ].map((feature, index) => (
+                      <li key={index} className="flex items-center">
+                        <CheckCircle className="h-4 w-4 text-green-500 mr-3 flex-shrink-0" />
+                        <span className="text-sm text-gray-700">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <Button
+                    className="w-full"
+                    variant="outline"
+                    onClick={() =>
+                      window.open(
+                        "mailto:sales@billbuddy.com?subject=Enterprise Inquiry",
+                        "_blank",
+                      )
+                    }
+                  >
+                    Contact Sales
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </div>
+
+          {/* Pricing FAQ */}
+          <div className="mt-16 text-center">
+            <h3
+              className="text-lg font-semibold mb-6"
+              style={{ color: tokens.colors.primary.navy[900] }}
+            >
+              Frequently asked questions
+            </h3>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 text-left">
+              <div>
+                <h4 className="font-medium mb-2 text-gray-900">
+                  Can I change plans anytime?
+                </h4>
+                <p className="text-sm text-gray-600">
+                  Yes, you can upgrade or downgrade your plan at any time from
+                  your account settings.
+                </p>
+              </div>
+              <div>
+                <h4 className="font-medium mb-2 text-gray-900">
+                  Is there a free trial?
+                </h4>
+                <p className="text-sm text-gray-600">
+                  Yes! All paid plans include a 14-day free trial with full
+                  access to features.
+                </p>
+              </div>
+              <div>
+                <h4 className="font-medium mb-2 text-gray-900">
+                  How secure is my data?
+                </h4>
+                <p className="text-sm text-gray-600">
+                  We use bank-level 256-bit encryption and never store your
+                  banking credentials.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Social Proof Section */}
       <section className="bg-gray-50 py-20">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
