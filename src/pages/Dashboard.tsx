@@ -40,6 +40,7 @@ import {
   MoreHorizontal,
   Mail,
   FileText,
+  Settings,
 } from "lucide-react";
 import { BillTile } from "@/components/BillTile";
 import { FloatingActionButton } from "@/components/FloatingActionButton";
