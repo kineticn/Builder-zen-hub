@@ -51,13 +51,24 @@ export const LineChart: React.FC<LineChartProps> = ({
             tickLine={false}
             fontSize={12}
             stroke="#6b7280"
+            tick={{ fontSize: 12, fill: "#6b7280" }}
+            type="category"
+            allowDataOverflow={false}
+            allowDecimals={false}
+            allowDuplicatedCategory={false}
           />
           <YAxis
             axisLine={false}
             tickLine={false}
             fontSize={12}
             stroke="#6b7280"
+            tick={{ fontSize: 12, fill: "#6b7280" }}
             tickFormatter={(value) => `$${value}`}
+            type="number"
+            allowDataOverflow={false}
+            allowDecimals={true}
+            allowDuplicatedCategory={false}
+            domain={["auto", "auto"]}
           />
           <Tooltip
             contentStyle={{
