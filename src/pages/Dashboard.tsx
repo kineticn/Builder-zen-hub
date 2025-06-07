@@ -579,6 +579,15 @@ const Dashboard: React.FC = () => {
                   )}
                 </DropdownMenuItem>
               ))}
+              <div className="border-t border-gray-200 mt-1 pt-1">
+                <DropdownMenuItem
+                  onClick={() => navigate("/household/manage")}
+                  className="flex items-center space-x-3 p-3 text-teal-600"
+                >
+                  <Settings className="h-4 w-4" />
+                  <span>Manage Households</span>
+                </DropdownMenuItem>
+              </div>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
