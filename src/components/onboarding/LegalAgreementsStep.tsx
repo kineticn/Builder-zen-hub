@@ -418,7 +418,7 @@ By using BillBuddy, you acknowledge that you have read and understand this Priva
     title: "Electronic Consent Agreement",
     description: "Agreement to receive electronic communications",
     isRequired: true,
-    minReadTime: 20,
+    minReadTime: 10,
     content: `# Electronic Consent Agreement
 
 **Last Updated:** December 15, 2024
