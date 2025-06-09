@@ -213,7 +213,7 @@ By using BillBuddy, you acknowledge that you have read, understood, and agree to
     title: "Privacy Policy",
     description: "How we collect, use, and protect your data",
     isRequired: true,
-    minReadTime: 60,
+    minReadTime: 10,
     content: `# BillBuddy Privacy Policy
 
 **Last Updated:** December 15, 2024
