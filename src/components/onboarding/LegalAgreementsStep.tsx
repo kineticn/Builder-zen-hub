@@ -805,11 +805,13 @@ export const LegalAgreementsStep: React.FC<LegalAgreementsStepProps> = ({
     const progress = getDocumentProgress(docId);
     const doc = legalDocuments.find((d) => d.id === docId);
 
-    return (
-      progress?.hasViewed &&
-      progress?.scrolledToBottom &&
-      (!doc || progress.timeSpent >= doc.minReadTime)
-    );
+    // More lenient requirements - either scrolled to bottom OR spent enough time
+    const hasScrolled = progress?.scrolledToBottom;
+    const hasSpentTime =
+      !doc || progress?.timeSpent >= Math.max(doc.minReadTime * 0.8, 15); // 80% of min time or 15 seconds minimum
+    const hasViewed = progress?.hasViewed;
+
+    return hasViewed && (hasScrolled || hasSpentTime);
   };
 
   return (
