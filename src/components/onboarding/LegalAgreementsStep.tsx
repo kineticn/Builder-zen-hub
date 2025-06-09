@@ -857,7 +857,7 @@ export const LegalAgreementsStep: React.FC<LegalAgreementsStepProps> = ({
               <div className="flex items-center space-x-3">
                 <Checkbox
                   id={currentDocument.id}
-                  checked={legalAgreements[currentDocument.id]}
+                  checked={legalAgreements?.[currentDocument.id] || false}
                   onCheckedChange={(checked) =>
                     handleAgreementChange(currentDocument.id, !!checked)
                   }
