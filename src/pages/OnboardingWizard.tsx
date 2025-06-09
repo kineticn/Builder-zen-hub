@@ -707,294 +707,34 @@ const WelcomeStep: React.FC<{
   );
 };
 
-// Step 2: Legal Agreements (Before any data capture)
-const LegalAgreementsStep: React.FC<{
+// Step 2: Legal Agreements (Enhanced with scroll tracking and timestamping)
+const EnhancedLegalAgreementsStep: React.FC<{
   onNext: () => void;
   onPrev: () => void;
   state: OnboardingState;
-  onAgreementChange: (
-    agreementId: keyof OnboardingState["legalAgreements"],
-    checked: boolean,
-  ) => void;
-}> = ({ onNext, onPrev, state, onAgreementChange }) => {
-  const shouldReduceMotion = useReducedMotion();
-  const [errors, setErrors] = useState<string[]>([]);
-
-  const requiredAgreements = legalAgreements.filter(
-    (agreement) => agreement.required,
-  );
-  const optionalAgreements = legalAgreements.filter(
-    (agreement) => !agreement.required,
-  );
-
-  const allRequiredAgreed = requiredAgreements.every(
-    (agreement) => state.legalAgreements[agreement.id],
-  );
-
-  const validateAndNext = () => {
-    const missingRequired = requiredAgreements
-      .filter((agreement) => !state.legalAgreements[agreement.id])
-      .map((agreement) => agreement.title);
-
-    if (missingRequired.length > 0) {
-      setErrors(["You must agree to all required terms to continue."]);
-      return;
-    }
-
-    setErrors([]);
-    onNext();
+  updateState: (updates: Partial<OnboardingState>) => void;
+}> = ({ onNext, onPrev, state, updateState }) => {
+  const handleUpdateAgreements = (
+    agreements: OnboardingState["legalAgreements"],
+  ) => {
+    updateState({ legalAgreements: agreements });
   };
 
-  const getCategoryIcon = (category: LegalAgreement["category"]) => {
-    switch (category) {
-      case "core":
-        return <FileText className="h-4 w-4" />;
-      case "banking":
-        return <Lock className="h-4 w-4" />;
-      case "privacy":
-        return <Shield className="h-4 w-4" />;
-      case "communication":
-        return <Users className="h-4 w-4" />;
-    }
-  };
-
-  const getCategoryColor = (category: LegalAgreement["category"]) => {
-    switch (category) {
-      case "core":
-        return "bg-blue-100 text-blue-600";
-      case "banking":
-        return "bg-green-100 text-green-600";
-      case "privacy":
-        return "bg-purple-100 text-purple-600";
-      case "communication":
-        return "bg-orange-100 text-orange-600";
-    }
+  const handleUpdateTimestamps = (
+    timestamps: OnboardingState["agreementTimestamps"],
+  ) => {
+    updateState({ agreementTimestamps: timestamps });
   };
 
   return (
-    <div
-      className="flex-1 flex flex-col p-6"
-      style={{ opacity: 1, visibility: "visible" }}
-    >
-      <div className="max-w-2xl mx-auto w-full space-y-6 flex-1 flex flex-col">
-        <div className="text-center space-y-4">
-          <div className="flex items-center justify-center space-x-2">
-            <Shield className="h-8 w-8 text-teal-600" />
-            <h2 className="text-2xl font-bold text-navy-900 font-display">
-              Terms & Privacy
-            </h2>
-          </div>
-          <p className="text-gray-600">
-            Before we begin, please review and accept our terms. This ensures
-            your data is protected.
-          </p>
-          <div
-            className="border rounded-lg p-3"
-            style={{
-              backgroundColor: tokens.colors.primary.teal[50],
-              borderColor: tokens.colors.primary.teal[200],
-            }}
-          >
-            <div className="flex items-center space-x-2">
-              <Shield className="h-4 w-4 text-teal-600" />
-              <p className="text-sm text-teal-800 font-medium">
-                ✓ No data collection until you agree to these terms
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex-1">
-          <ScrollArea className="h-96 pr-4">
-            <div className="space-y-6">
-              {/* Required Agreements */}
-              <div className="space-y-4">
-                <div className="flex items-center space-x-2">
-                  <AlertTriangle className="h-5 w-5 text-red-500" />
-                  <h3 className="font-semibold text-gray-900">
-                    Required Agreements
-                  </h3>
-                  <Badge variant="destructive" className="text-xs">
-                    Required
-                  </Badge>
-                </div>
-
-                <div className="space-y-3">
-                  {requiredAgreements.map((agreement) => (
-                    <div
-                      key={agreement.id}
-                      className={cn(
-                        "border rounded-lg p-4 transition-all duration-200",
-                        state.legalAgreements[agreement.id]
-                          ? "border-teal-300 bg-teal-50"
-                          : "border-gray-200 hover:border-gray-300",
-                      )}
-                    >
-                      <div className="flex items-start space-x-3">
-                        <Checkbox
-                          id={agreement.id}
-                          checked={state.legalAgreements[agreement.id]}
-                          onCheckedChange={(checked) =>
-                            onAgreementChange(agreement.id, checked as boolean)
-                          }
-                          className="mt-1"
-                        />
-                        <div className="flex-1 space-y-2">
-                          <div className="flex items-center space-x-2">
-                            <div
-                              className={cn(
-                                "w-6 h-6 rounded-full flex items-center justify-center",
-                                getCategoryColor(agreement.category),
-                              )}
-                            >
-                              {getCategoryIcon(agreement.category)}
-                            </div>
-                            <label
-                              htmlFor={agreement.id}
-                              className="text-sm font-semibold text-gray-900 cursor-pointer"
-                            >
-                              {agreement.title}
-                            </label>
-                            <Badge variant="outline" className="text-xs">
-                              v{agreement.version}
-                            </Badge>
-                          </div>
-                          <p className="text-xs text-gray-600 leading-relaxed">
-                            {agreement.description}
-                          </p>
-                          <a
-                            href={agreement.documentUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center space-x-1 text-xs text-teal-600 hover:text-teal-700 transition-colors"
-                          >
-                            <span>Read full document</span>
-                            <ExternalLink className="h-3 w-3" />
-                          </a>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <Separator />
-
-              {/* Optional Agreements */}
-              <div className="space-y-4">
-                <div className="flex items-center space-x-2">
-                  <Star className="h-5 w-5 text-blue-500" />
-                  <h3 className="font-semibold text-gray-900">
-                    Optional Agreements
-                  </h3>
-                  <Badge variant="secondary" className="text-xs">
-                    Optional
-                  </Badge>
-                </div>
-
-                <div className="space-y-3">
-                  {optionalAgreements.map((agreement) => (
-                    <div
-                      key={agreement.id}
-                      className={cn(
-                        "border rounded-lg p-4 transition-all duration-200",
-                        state.legalAgreements[agreement.id]
-                          ? "border-blue-300 bg-blue-50"
-                          : "border-gray-200 hover:border-gray-300",
-                      )}
-                    >
-                      <div className="flex items-start space-x-3">
-                        <Checkbox
-                          id={agreement.id}
-                          checked={state.legalAgreements[agreement.id]}
-                          onCheckedChange={(checked) =>
-                            onAgreementChange(agreement.id, checked as boolean)
-                          }
-                          className="mt-1"
-                        />
-                        <div className="flex-1 space-y-2">
-                          <div className="flex items-center space-x-2">
-                            <div
-                              className={cn(
-                                "w-6 h-6 rounded-full flex items-center justify-center",
-                                getCategoryColor(agreement.category),
-                              )}
-                            >
-                              {getCategoryIcon(agreement.category)}
-                            </div>
-                            <label
-                              htmlFor={agreement.id}
-                              className="text-sm font-semibold text-gray-900 cursor-pointer"
-                            >
-                              {agreement.title}
-                            </label>
-                            <Badge variant="outline" className="text-xs">
-                              v{agreement.version}
-                            </Badge>
-                          </div>
-                          <p className="text-xs text-gray-600 leading-relaxed">
-                            {agreement.description}
-                          </p>
-                          <a
-                            href={agreement.documentUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center space-x-1 text-xs text-blue-600 hover:text-blue-700 transition-colors"
-                          >
-                            <span>Read full document</span>
-                            <ExternalLink className="h-3 w-3" />
-                          </a>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </ScrollArea>
-        </div>
-
-        {/* Error display */}
-        {errors.length > 0 && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-            <div className="flex items-center space-x-2">
-              <AlertTriangle className="h-4 w-4 text-red-500" />
-              <div className="text-sm text-red-700">
-                {errors.map((error, index) => (
-                  <p key={index}>{error}</p>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Navigation buttons */}
-        <div className="flex items-center justify-between">
-          <Button
-            variant="outline"
-            onClick={onPrev}
-            className="flex items-center space-x-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span>Back</span>
-          </Button>
-
-          <Button
-            onClick={validateAndNext}
-            disabled={!allRequiredAgreed}
-            className={cn(
-              "flex items-center space-x-2",
-              allRequiredAgreed
-                ? "bg-teal-600 hover:bg-teal-700"
-                : "bg-gray-300 cursor-not-allowed",
-            )}
-          >
-            <span>Continue</span>
-            <ArrowRight className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-    </div>
+    <LegalAgreementsStep
+      onNext={onNext}
+      onPrev={onPrev}
+      legalAgreements={state.legalAgreements}
+      agreementTimestamps={state.agreementTimestamps}
+      onUpdateAgreements={handleUpdateAgreements}
+      onUpdateTimestamps={handleUpdateTimestamps}
+    />
   );
 };
 
