@@ -341,41 +341,39 @@ export const AffiliateManagementCard: React.FC<
             </div>
 
             {showAdvanced && (
-              <Accordion type="single" collapsible className="w-full">
-                <AccordionItem value="advanced">
-                  <AccordionTrigger>Advanced Settings</AccordionTrigger>
-                  <AccordionContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="customDomain">
-                        Custom Domain (Optional)
-                      </Label>
-                      <Input
-                        id="customDomain"
-                        value={settings.customDomain}
-                        onChange={(e) =>
-                          handleSettingChange("customDomain", e.target.value)
-                        }
-                        placeholder="your-domain.com"
-                      />
-                      <p className="text-xs text-gray-500">
-                        Use your own domain for affiliate links
-                      </p>
-                    </div>
+              <div className="border border-gray-200 rounded-lg p-4 space-y-4">
+                <h4 className="font-medium text-gray-900">Advanced Settings</h4>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="customDomain">
+                      Custom Domain (Optional)
+                    </Label>
+                    <Input
+                      id="customDomain"
+                      value={settings.customDomain}
+                      onChange={(e) =>
+                        handleSettingChange("customDomain", e.target.value)
+                      }
+                      placeholder="your-domain.com"
+                    />
+                    <p className="text-xs text-gray-500">
+                      Use your own domain for affiliate links
+                    </p>
+                  </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="analyticsId">Google Analytics ID</Label>
-                      <Input
-                        id="analyticsId"
-                        value={settings.analyticsId}
-                        onChange={(e) =>
-                          handleSettingChange("analyticsId", e.target.value)
-                        }
-                        placeholder="GA-XXXXXXXXX"
-                      />
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
+                  <div className="space-y-2">
+                    <Label htmlFor="analyticsId">Google Analytics ID</Label>
+                    <Input
+                      id="analyticsId"
+                      value={settings.analyticsId}
+                      onChange={(e) =>
+                        handleSettingChange("analyticsId", e.target.value)
+                      }
+                      placeholder="GA-XXXXXXXXX"
+                    />
+                  </div>
+                </div>
+              </div>
             )}
           </TabsContent>
 
