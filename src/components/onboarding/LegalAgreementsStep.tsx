@@ -673,15 +673,54 @@ export const LegalAgreementsStep: React.FC<LegalAgreementsStepProps> = ({
     }
   }, [currentDocument]);
 
+  const formatDocumentContent = (content: string): string => {
+    return (
+      content
+        // Convert markdown headers
+        .replace(
+          /^# (.*$)/gim,
+          '<h1 class="text-xl font-bold text-gray-900 mb-4">$1</h1>',
+        )
+        .replace(
+          /^## (.*$)/gim,
+          '<h2 class="text-lg font-semibold text-gray-800 mb-3 mt-6">$1</h2>',
+        )
+        .replace(
+          /^### (.*$)/gim,
+          '<h3 class="text-base font-medium text-gray-800 mb-2 mt-4">$1</h3>',
+        )
+        // Convert bold text
+        .replace(
+          /\*\*(.*?)\*\*/g,
+          '<strong class="font-semibold text-gray-900">$1</strong>',
+        )
+        // Convert paragraphs
+        .replace(/\n\n/g, '</p><p class="mb-3">')
+        .replace(/^(.+)$/gm, '<p class="mb-3">$1</p>')
+        // Convert bullet points
+        .replace(/^- (.*$)/gim, '<li class="ml-4 mb-1">• $1</li>')
+        // Wrap lists
+        .replace(/(<li.*<\/li>)/gs, '<ul class="mb-4">$1</ul>')
+        // Clean up extra paragraph tags
+        .replace(/<p class="mb-3"><\/p>/g, "")
+        .replace(/<p class="mb-3">(<h[1-6])/g, "$1")
+        .replace(/(<\/h[1-6]>)<\/p>/g, "$1")
+    );
+  };
+
   const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
     if (!currentDocument) return;
 
-    const target = event.target as HTMLDivElement;
+    const target = event.currentTarget as HTMLDivElement;
     const { scrollTop, scrollHeight, clientHeight } = target;
-    const scrollPercentage = (scrollTop / (scrollHeight - clientHeight)) * 100;
 
-    // Consider scrolled to bottom if within 95% (to account for rounding)
-    const scrolledToBottom = scrollPercentage >= 95;
+    // More lenient scroll detection - consider scrolled to bottom if within 90%
+    const scrollPercentage = ((scrollTop + clientHeight) / scrollHeight) * 100;
+    const scrolledToBottom = scrollPercentage >= 90;
+
+    console.log(
+      `Scroll: ${scrollPercentage.toFixed(1)}%, scrolledToBottom: ${scrolledToBottom}`,
+    );
 
     setScrollProgress((prev) => ({
       ...prev,
