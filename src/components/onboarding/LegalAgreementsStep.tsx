@@ -717,9 +717,6 @@ export const LegalAgreementsStep: React.FC<LegalAgreementsStepProps> = ({
     // More lenient scroll detection - consider scrolled to bottom if within 90%
     const scrollPercentage = ((scrollTop + clientHeight) / scrollHeight) * 100;
     const scrolledToBottom = scrollPercentage >= 90;
-
-    console.log(
-      `Scroll: ${scrollPercentage.toFixed(1)}%, scrolledToBottom: ${scrolledToBottom}`,
     );
 
     setScrollProgress((prev) => ({
