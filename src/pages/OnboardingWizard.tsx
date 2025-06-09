@@ -53,6 +53,7 @@ import {
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { tokens } from "@/design-tokens";
+import { LegalAgreementsStep } from "@/components/onboarding/LegalAgreementsStep";
 
 interface OnboardingState {
   step: number;
