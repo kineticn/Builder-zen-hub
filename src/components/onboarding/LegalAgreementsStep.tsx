@@ -723,7 +723,7 @@ export const LegalAgreementsStep: React.FC<LegalAgreementsStepProps> = ({
     }
 
     // Check if user has actually viewed and scrolled through documents they agreed to
-    Object.entries(legalAgreements).forEach(([docId, isAccepted]) => {
+    Object.entries(legalAgreements || {}).forEach(([docId, isAccepted]) => {
       if (isAccepted) {
         const progress = scrollProgress[docId];
         const doc = legalDocuments.find((d) => d.id === docId);
