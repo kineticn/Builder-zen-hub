@@ -420,11 +420,11 @@ const OnboardingWizard: React.FC = () => {
       case 2:
         return (
           <div style={stepStyle}>
-            <LegalAgreementsStep
+            <EnhancedLegalAgreementsStep
               onNext={nextStep}
               onPrev={prevStep}
               state={state}
-              onAgreementChange={handleAgreementChange}
+              updateState={updateState}
             />
           </div>
         );
