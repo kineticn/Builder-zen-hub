@@ -888,7 +888,7 @@ export const LegalAgreementsStep: React.FC<LegalAgreementsStepProps> = ({
               {legalDocuments.map((doc) => {
                 const progress = getDocumentProgress(doc.id);
                 const isFullyRead = isDocumentFullyRead(doc.id);
-                const isAccepted = legalAgreements[doc.id];
+                const isAccepted = legalAgreements?.[doc.id] || false;
 
                 return (
                   <div
