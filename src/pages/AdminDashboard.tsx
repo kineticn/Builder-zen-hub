@@ -959,6 +959,20 @@ const AdminDashboard: React.FC = () => {
           </div>
         </div>
 
+        {/* Affiliate Management Section */}
+        <div className="mt-6">
+          <AffiliateManagementCard
+            onSave={(data) => {
+              console.log("Affiliate settings saved:", data);
+              toast({
+                title: "Affiliate settings saved",
+                description:
+                  "Your affiliate configuration has been updated successfully.",
+              });
+            }}
+          />
+        </div>
+
         {/* Additional System Information */}
         <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
