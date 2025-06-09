@@ -606,8 +606,15 @@ Date of Consent: [Timestamp will be recorded upon agreement]`,
 export const LegalAgreementsStep: React.FC<LegalAgreementsStepProps> = ({
   onNext,
   onPrev,
-  legalAgreements,
-  agreementTimestamps,
+  legalAgreements = {
+    termsOfService: false,
+    privacyPolicy: false,
+    electronicConsent: false,
+    plaidTerms: false,
+    dataSharing: false,
+    communicationConsent: false,
+  },
+  agreementTimestamps = {},
   onUpdateAgreements,
   onUpdateTimestamps,
 }) => {
@@ -618,7 +625,6 @@ export const LegalAgreementsStep: React.FC<LegalAgreementsStepProps> = ({
   const [errors, setErrors] = useState<string[]>([]);
 
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-
   // Initialize scroll progress for all documents
   useEffect(() => {
     const initialProgress: ScrollProgress = {};
