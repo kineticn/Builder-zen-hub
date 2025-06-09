@@ -896,9 +896,13 @@ export const LegalAgreementsStep: React.FC<LegalAgreementsStepProps> = ({
                   <Checkbox
                     id={currentDocument.id}
                     checked={legalAgreements?.[currentDocument.id] || false}
-                    onCheckedChange={(checked) =>
-                      handleAgreementChange(currentDocument.id, !!checked)
-                    }
+                    onCheckedChange={(checked) => {
+                      handleAgreementChange(currentDocument.id, !!checked);
+                      // Auto-return to list after accepting agreement
+                      if (checked && isDocumentFullyRead(currentDocument.id)) {
+                        setTimeout(() => setCurrentDocument(null), 500);
+                      }
+                    }}
                     disabled={!isDocumentFullyRead(currentDocument.id)}
                   />
                   <label
@@ -929,6 +933,33 @@ export const LegalAgreementsStep: React.FC<LegalAgreementsStepProps> = ({
                   </div>
                 )}
               </div>
+
+              {/* Action buttons for better UX */}
+              {isDocumentFullyRead(currentDocument.id) && (
+                <div className="flex items-center justify-between pt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentDocument(null)}
+                    className="flex items-center space-x-2"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                    <span>Back to List</span>
+                  </Button>
+
+                  {legalAgreements?.[currentDocument.id] && (
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => setCurrentDocument(null)}
+                      className="bg-teal-600 hover:bg-teal-700 flex items-center space-x-2"
+                    >
+                      <Check className="h-4 w-4" />
+                      <span>Continue to List</span>
+                    </Button>
+                  )}
+                </div>
+              )}
 
               {/* Progress indicators */}
               <div className="flex items-center space-x-4 text-xs text-gray-500">
