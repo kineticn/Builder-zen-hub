@@ -713,7 +713,7 @@ export const LegalAgreementsStep: React.FC<LegalAgreementsStepProps> = ({
     // Check if all required documents are agreed to
     const requiredDocs = legalDocuments.filter((doc) => doc.isRequired);
     const unacceptedRequired = requiredDocs.filter(
-      (doc) => !legalAgreements[doc.id],
+      (doc) => !legalAgreements?.[doc.id],
     );
 
     if (unacceptedRequired.length > 0) {
