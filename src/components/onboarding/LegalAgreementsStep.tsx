@@ -893,32 +893,85 @@ export const LegalAgreementsStep: React.FC<LegalAgreementsStepProps> = ({
               </div>
             </div>
 
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-              <div className="flex items-center space-x-3">
-                <Checkbox
-                  id={currentDocument.id}
-                  checked={legalAgreements?.[currentDocument.id] || false}
-                  onCheckedChange={(checked) =>
-                    handleAgreementChange(currentDocument.id, !!checked)
-                  }
-                  disabled={!isDocumentFullyRead(currentDocument.id)}
-                />
-                <label
-                  htmlFor={currentDocument.id}
-                  className="text-sm font-medium text-gray-900 cursor-pointer"
-                >
-                  I have read and agree to the {currentDocument.title}
-                  {currentDocument.isRequired && (
-                    <span className="text-red-500 ml-1">*</span>
-                  )}
-                </label>
-              </div>
-              {!isDocumentFullyRead(currentDocument.id) && (
-                <div className="flex items-center space-x-2 text-amber-600 text-sm">
-                  <AlertTriangle className="h-4 w-4" />
-                  <span>Please read completely to accept</span>
+            <div className="p-4 bg-gray-50 rounded-lg space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <Checkbox
+                    id={currentDocument.id}
+                    checked={legalAgreements?.[currentDocument.id] || false}
+                    onCheckedChange={(checked) =>
+                      handleAgreementChange(currentDocument.id, !!checked)
+                    }
+                    disabled={!isDocumentFullyRead(currentDocument.id)}
+                  />
+                  <label
+                    htmlFor={currentDocument.id}
+                    className={cn(
+                      "text-sm font-medium cursor-pointer",
+                      isDocumentFullyRead(currentDocument.id)
+                        ? "text-gray-900"
+                        : "text-gray-500",
+                    )}
+                  >
+                    I have read and agree to the {currentDocument.title}
+                    {currentDocument.isRequired && (
+                      <span className="text-red-500 ml-1">*</span>
+                    )}
+                  </label>
                 </div>
-              )}
+
+                {isDocumentFullyRead(currentDocument.id) ? (
+                  <div className="flex items-center space-x-2 text-green-600 text-sm">
+                    <Check className="h-4 w-4" />
+                    <span>Ready to accept</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center space-x-2 text-amber-600 text-sm">
+                    <AlertTriangle className="h-4 w-4" />
+                    <span>Please read completely</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Progress indicators */}
+              <div className="flex items-center space-x-4 text-xs text-gray-500">
+                <div className="flex items-center space-x-1">
+                  {getDocumentProgress(currentDocument.id)?.hasViewed ? (
+                    <Check className="h-3 w-3 text-green-500" />
+                  ) : (
+                    <Clock className="h-3 w-3" />
+                  )}
+                  <span>Viewed</span>
+                </div>
+
+                <div className="flex items-center space-x-1">
+                  {getDocumentProgress(currentDocument.id)?.scrolledToBottom ? (
+                    <Check className="h-3 w-3 text-green-500" />
+                  ) : (
+                    <Clock className="h-3 w-3" />
+                  )}
+                  <span>Scrolled to end</span>
+                </div>
+
+                {currentDocument.minReadTime > 0 && (
+                  <div className="flex items-center space-x-1">
+                    {(getDocumentProgress(currentDocument.id)?.timeSpent ||
+                      0) >=
+                    currentDocument.minReadTime * 0.8 ? (
+                      <Check className="h-3 w-3 text-green-500" />
+                    ) : (
+                      <Clock className="h-3 w-3" />
+                    )}
+                    <span>
+                      Time:{" "}
+                      {Math.ceil(
+                        getDocumentProgress(currentDocument.id)?.timeSpent || 0,
+                      )}
+                      s / {Math.ceil(currentDocument.minReadTime * 0.8)}s
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         ) : (
