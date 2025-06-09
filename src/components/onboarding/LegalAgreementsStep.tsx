@@ -878,9 +878,10 @@ export const LegalAgreementsStep: React.FC<LegalAgreementsStepProps> = ({
 
             <div className="flex-1 border border-gray-200 rounded-lg overflow-hidden">
               <div
-                className="h-96 overflow-y-auto p-6"
+                className="h-80 md:h-96 overflow-y-auto p-6"
                 onScroll={handleScroll}
                 ref={scrollAreaRef}
+                style={{ maxHeight: "calc(100vh - 400px)" }}
               >
                 <div className="prose prose-sm max-w-none">
                   <div
