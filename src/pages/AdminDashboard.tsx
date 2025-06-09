@@ -693,6 +693,7 @@ const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
 };
 
 const AdminDashboard: React.FC = () => {
+  const { toast } = useToast();
   const [complianceData, setComplianceData] =
     useState<ComplianceMetrics>(mockComplianceData);
   const [riskFlags, setRiskFlags] = useState<RiskFlag[]>(mockRiskFlags);
