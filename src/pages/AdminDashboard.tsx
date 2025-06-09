@@ -50,6 +50,7 @@ import {
 import { ComplianceStatusCard } from "@/components/admin/ComplianceStatusCard";
 import { RiskFlagTable } from "@/components/admin/RiskFlagTable";
 import { BillSyncStatus } from "@/components/admin/BillSyncStatus";
+import { AffiliateManagementCard } from "@/components/admin/AffiliateManagementCard";
 import {
   mockComplianceData,
   mockRiskFlags,
