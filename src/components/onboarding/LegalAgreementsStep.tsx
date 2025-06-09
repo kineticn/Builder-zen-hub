@@ -835,23 +835,22 @@ export const LegalAgreementsStep: React.FC<LegalAgreementsStepProps> = ({
               </div>
             </div>
 
-            <ScrollArea
-              ref={scrollAreaRef}
-              className="flex-1 border border-gray-200 rounded-lg"
-              onScroll={handleScroll}
-            >
-              <div className="p-6 prose prose-sm max-w-none">
-                <div
-                  className="whitespace-pre-wrap"
-                  dangerouslySetInnerHTML={{
-                    __html: currentDocument.content.replace(
-                      /^# (.*$)/gim,
-                      "<h1>$1</h1>",
-                    ),
-                  }}
-                />
+            <div className="flex-1 border border-gray-200 rounded-lg overflow-hidden">
+              <div
+                className="h-96 overflow-y-auto p-6"
+                onScroll={handleScroll}
+                ref={scrollAreaRef}
+              >
+                <div className="prose prose-sm max-w-none">
+                  <div
+                    className="text-sm leading-relaxed space-y-4"
+                    dangerouslySetInnerHTML={{
+                      __html: formatDocumentContent(currentDocument.content),
+                    }}
+                  />
+                </div>
               </div>
-            </ScrollArea>
+            </div>
 
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <div className="flex items-center space-x-3">
