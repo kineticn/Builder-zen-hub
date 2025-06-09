@@ -61,7 +61,7 @@ const legalDocuments: LegalDocument[] = [
     title: "Terms of Service",
     description: "Our terms and conditions for using BillBuddy",
     isRequired: true,
-    minReadTime: 45,
+    minReadTime: 10,
     content: `# BillBuddy Terms of Service
 
 **Last Updated:** December 15, 2024
