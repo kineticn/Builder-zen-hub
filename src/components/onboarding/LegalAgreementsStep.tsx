@@ -968,7 +968,7 @@ export const LegalAgreementsStep: React.FC<LegalAgreementsStepProps> = ({
                         </label>
                       </div>
 
-                      {isAccepted && agreementTimestamps[doc.id] && (
+                      {isAccepted && agreementTimestamps?.[doc.id] && (
                         <div className="text-xs text-gray-500">
                           Accepted:{" "}
                           {new Date(
