@@ -361,7 +361,7 @@ export const EmailIntegration: React.FC = () => {
                   onClick={() => handleConnectAccount("gmail")}
                   className="flex items-center space-x-2"
                 >
-                  <Gmail className="h-4 w-4 text-red-600" />
+                  <Mail className="h-4 w-4 text-red-600" />
                   <span>Gmail</span>
                 </Button>
                 <Button
