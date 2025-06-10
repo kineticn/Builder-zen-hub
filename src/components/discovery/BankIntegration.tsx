@@ -19,6 +19,9 @@ import {
   Calendar,
   BarChart3,
 } from "lucide-react";
+import { PlaidLinkComponent } from "./PlaidLinkComponent";
+import { billDetectionService } from "@/services/billDetectionService";
+import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import {
   Card,
