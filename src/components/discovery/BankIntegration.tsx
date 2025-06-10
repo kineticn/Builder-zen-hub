@@ -207,10 +207,37 @@ export const BankIntegration: React.FC = () => {
     account: "all",
   });
 
-  const handleConnectBank = () => {
-    // Simulate Plaid Link flow
-    console.log("Opening Plaid Link...");
-    // In real implementation, this would open Plaid Link
+  const handlePlaidSuccess = (accessToken: string, accounts: any[]) => {
+    // Store access token securely (in production, send to backend)
+    const existingTokens = JSON.parse(
+      localStorage.getItem("bankAccessTokens") || "[]",
+    );
+    existingTokens.push(accessToken);
+    localStorage.setItem("bankAccessTokens", JSON.stringify(existingTokens));
+
+    // Add accounts to state
+    const newAccounts: BankAccount[] = accounts.map((account) => ({
+      id: account.account_id,
+      accountName: `${account.name} ****${account.mask}`,
+      bankName: account.official_name || account.name,
+      accountType: account.subtype as "checking" | "savings" | "credit",
+      lastSync: new Date().toISOString(),
+      status: "connected",
+      billsDetected: 0,
+      autoAnalysis: true,
+      balance: account.balances.current,
+    }));
+
+    setBankAccounts((prev) => [...prev, ...newAccounts]);
+
+    toast({
+      title: "Bank Connected",
+      description: `Successfully connected ${accounts.length} account(s)`,
+    });
+  };
+
+  const handlePlaidError = (error: any) => {
+    console.error("Plaid connection error:", error);
   };
 
   const handleAnalyzeAccount = async (accountId: string) => {
