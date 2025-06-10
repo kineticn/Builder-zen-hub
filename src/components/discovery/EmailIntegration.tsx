@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
   Mail,
-  Gmail,
   MessageSquare,
   CheckCircle,
   AlertCircle,
