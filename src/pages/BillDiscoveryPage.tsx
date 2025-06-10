@@ -61,9 +61,11 @@ interface DiscoveredBill {
 
 export const BillDiscoveryPage: React.FC = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");
   const [isScanning, setIsScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
+  const [scanMessage, setScanMessage] = useState("");
   const [discoveryStats, setDiscoveryStats] = useState<DiscoveryStats>({
     totalBillsFound: 23,
     emailBillsFound: 15,
