@@ -19,7 +19,7 @@ import LegalComplianceAdmin from "./pages/LegalComplianceAdmin";
 import Settings from "./pages/Settings";
 import ProfileEditPage from "./pages/ProfileEditPage";
 import { AddBillPage } from "./pages/AddBillPage";
-import { BillDiscoveryPage } from "./pages/BillDiscoveryPage";
+import { BillDiscoveryPageSimple as BillDiscoveryPage } from "./pages/BillDiscoveryPageSimple";
 import { OAuthCallback } from "./components/discovery/OAuthCallback";
 import HouseholdManagementPage from "./pages/HouseholdManagementPage";
 import CreateHouseholdPage from "./pages/CreateHouseholdPage";
