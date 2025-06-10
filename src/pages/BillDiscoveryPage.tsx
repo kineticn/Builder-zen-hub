@@ -18,6 +18,8 @@ import {
   DollarSign,
   Building,
 } from "lucide-react";
+import { billDetectionService } from "@/services/billDetectionService";
+import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import {
   Card,
