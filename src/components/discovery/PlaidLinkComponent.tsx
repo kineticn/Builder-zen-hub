@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { usePlaidLink } from "react-plaid-link";
 import { Button } from "@/components/ui/button";
 import { Shield, AlertCircle, CheckCircle, Loader2 } from "lucide-react";
 import { plaidService } from "@/services/plaidService";
@@ -21,132 +20,67 @@ export const PlaidLinkComponent: React.FC<PlaidLinkComponentProps> = ({
   disabled = false,
 }) => {
   const { toast } = useToast();
-  const [linkToken, setLinkToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Initialize Plaid Link
-  useEffect(() => {
-    const initializePlaid = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
+  // Simulate Plaid Link flow
+  const handleConnect = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
 
-        const tokenResponse = await plaidService.createLinkToken(userId);
-        setLinkToken(tokenResponse.link_token);
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Failed to initialize Plaid";
-        setError(errorMessage);
-        console.error("Plaid initialization error:", err);
+      // Step 1: Create link token
+      toast({
+        title: "Initializing Connection",
+        description: "Preparing secure bank connection...",
+      });
 
-        toast({
-          title: "Connection Error",
-          description:
-            "Unable to initialize bank connection. Please check your configuration.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
+      const tokenResponse = await plaidService.createLinkToken(userId);
 
-    if (userId && !linkToken) {
-      initializePlaid();
-    }
-  }, [userId, linkToken, toast]);
+      // Step 2: Simulate user bank selection and login
+      toast({
+        title: "Demo Mode",
+        description: "Simulating bank connection flow...",
+      });
 
-  // Handle successful link
-  const onPlaidSuccess = useCallback(
-    async (publicToken: string, metadata: any) => {
-      try {
-        setIsLoading(true);
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
-        // Exchange public token for access token
-        const tokenResponse =
-          await plaidService.exchangePublicToken(publicToken);
+      // Step 3: Exchange for access token
+      const accessResponse =
+        await plaidService.exchangePublicToken("demo-public-token");
 
-        // Get account information
-        const accounts = await plaidService.getAccounts(
-          tokenResponse.access_token,
-        );
-
-        toast({
-          title: "Bank Connected Successfully",
-          description: `Connected ${accounts.length} account(s) from ${metadata.institution.name}`,
-        });
-
-        // Call success callback
-        onSuccess(tokenResponse.access_token, accounts);
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Failed to connect bank account";
-        setError(errorMessage);
-        console.error("Plaid success handler error:", err);
-
-        toast({
-          title: "Connection Failed",
-          description: errorMessage,
-          variant: "destructive",
-        });
-
-        onError?.(err);
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [onSuccess, onError, toast],
-  );
-
-  // Handle Plaid errors
-  const onPlaidError = useCallback(
-    (error: any) => {
-      console.error("Plaid Link error:", error);
+      // Step 4: Get accounts
+      const accounts = await plaidService.getAccounts(
+        accessResponse.access_token,
+      );
 
       toast({
-        title: "Connection Error",
-        description: error.error_message || "Failed to connect to your bank",
+        title: "Bank Connected Successfully",
+        description: `Connected ${accounts.length} account(s) from your bank`,
+      });
+
+      // Call success callback
+      onSuccess(accessResponse.access_token, accounts);
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to connect bank account";
+      setError(errorMessage);
+      console.error("Plaid connection error:", err);
+
+      toast({
+        title: "Connection Failed",
+        description: errorMessage,
         variant: "destructive",
       });
 
-      onError?.(error);
-    },
-    [onError, toast],
-  );
-
-  // Handle when user exits Link flow
-  const onPlaidExit = useCallback((error: any, metadata: any) => {
-    if (error) {
-      console.error("Plaid Link exit error:", error);
+      onError?.(err);
+    } finally {
+      setIsLoading(false);
     }
-    console.log("Plaid Link exit metadata:", metadata);
-  }, []);
-
-  // Configure Plaid Link hook
-  const config = {
-    token: linkToken,
-    onSuccess: onPlaidSuccess,
-    onError: onPlaidError,
-    onExit: onPlaidExit,
   };
 
-  const { open, ready, error: linkError } = usePlaidLink(config);
-
-  // Handle link errors
-  useEffect(() => {
-    if (linkError) {
-      setError(linkError.message);
-      toast({
-        title: "Link Error",
-        description: linkError.message,
-        variant: "destructive",
-      });
-    }
-  }, [linkError, toast]);
-
-  // Retry initialization
+  // Retry connection
   const handleRetry = () => {
-    setLinkToken(null);
     setError(null);
   };
 
@@ -173,8 +107,8 @@ export const PlaidLinkComponent: React.FC<PlaidLinkComponentProps> = ({
   return (
     <div className="space-y-4">
       <Button
-        onClick={() => open()}
-        disabled={disabled || !ready || isLoading}
+        onClick={handleConnect}
+        disabled={disabled || isLoading}
         className={`bg-teal-600 hover:bg-teal-700 flex items-center space-x-2 ${className}`}
       >
         {isLoading ? (
@@ -206,12 +140,20 @@ export const PlaidLinkComponent: React.FC<PlaidLinkComponentProps> = ({
         </div>
       </div>
 
-      {!ready && linkToken && (
+      {isLoading && (
         <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
           <Loader2 className="h-4 w-4 animate-spin" />
-          <span>Preparing secure connection...</span>
+          <span>Demo: Simulating secure bank connection...</span>
         </div>
       )}
+
+      {/* Demo notice */}
+      <div className="text-center p-3 bg-blue-50 border border-blue-200 rounded-lg">
+        <p className="text-xs text-blue-700">
+          <strong>Demo Mode:</strong> This simulates a real Plaid connection.
+          Connect real banks by adding your Plaid credentials to .env.local
+        </p>
+      </div>
     </div>
   );
 };
