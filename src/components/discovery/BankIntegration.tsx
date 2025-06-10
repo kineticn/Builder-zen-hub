@@ -241,27 +241,82 @@ export const BankIntegration: React.FC = () => {
   };
 
   const handleAnalyzeAccount = async (accountId: string) => {
+    const account = bankAccounts.find((acc) => acc.id === accountId);
+    if (!account) return;
+
     setIsAnalyzing(true);
     setAnalysisProgress(0);
 
-    // Simulate analysis process
-    const steps = [
-      { progress: 20, message: "Retrieving transaction history..." },
-      { progress: 40, message: "Identifying recurring patterns..." },
-      { progress: 60, message: "Analyzing payment frequencies..." },
-      { progress: 80, message: "Categorizing detected bills..." },
-      { progress: 100, message: "Analysis complete!" },
-    ];
+    try {
+      // Get access token for this account
+      const accessTokens = JSON.parse(
+        localStorage.getItem("bankAccessTokens") || "[]",
+      );
 
-    for (const step of steps) {
-      await new Promise((resolve) => setTimeout(resolve, 1200));
-      setAnalysisProgress(step.progress);
-    }
+      if (accessTokens.length === 0) {
+        throw new Error("No bank accounts connected");
+      }
 
-    setTimeout(() => {
+      // Use the first token for demo (in production, map tokens to accounts)
+      const accessToken = accessTokens[0];
+
+      const discoveredBills = await billDetectionService.analyzeBankAccount(
+        accessToken,
+        (progress) => {
+          setAnalysisProgress(progress.progress);
+        },
+      );
+
+      // Update detected bills
+      setDetectedBills((prev) => [
+        ...prev.filter((bill) => bill.accountId !== accountId),
+        ...discoveredBills.map((bill) => ({
+          id: bill.id,
+          merchantName: bill.name,
+          amount: bill.amount,
+          frequency: bill.frequency as
+            | "weekly"
+            | "monthly"
+            | "quarterly"
+            | "yearly",
+          lastTransaction:
+            bill.lastPaid || new Date().toISOString().split("T")[0],
+          nextPredicted:
+            bill.dueDate?.split("T")[0] ||
+            new Date().toISOString().split("T")[0],
+          confidence: bill.confidence,
+          category: bill.category,
+          accountId: accountId,
+          status: bill.status as "detected" | "confirmed" | "ignored",
+          transactionHistory: [], // Would be populated from real data
+        })),
+      ]);
+
+      // Update account with bills count
+      setBankAccounts((prev) =>
+        prev.map((acc) =>
+          acc.id === accountId
+            ? { ...acc, billsDetected: discoveredBills.length }
+            : acc,
+        ),
+      );
+
+      toast({
+        title: "Analysis Complete",
+        description: `Found ${discoveredBills.length} recurring bills`,
+      });
+    } catch (error) {
+      console.error("Analysis error:", error);
+      toast({
+        title: "Analysis Failed",
+        description:
+          error instanceof Error ? error.message : "Failed to analyze account",
+        variant: "destructive",
+      });
+    } finally {
       setIsAnalyzing(false);
       setAnalysisProgress(0);
-    }, 1000);
+    }
   };
 
   const handleBillAction = (
