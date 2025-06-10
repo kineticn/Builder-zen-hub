@@ -47,6 +47,7 @@ const App = () => (
               <Route path="/onboarding" element={<OnboardingWizard />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/add-bill" element={<AddBillPage />} />
+              <Route path="/bill-discovery" element={<BillDiscoveryPage />} />
               <Route path="/bill/:id" element={<BillDetail />} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route
