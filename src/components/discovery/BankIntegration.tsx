@@ -73,6 +73,7 @@ interface TransactionBill {
 }
 
 export const BankIntegration: React.FC = () => {
+  const { toast } = useToast();
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([
     {
       id: "1",
