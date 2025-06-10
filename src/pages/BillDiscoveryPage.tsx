@@ -129,25 +129,85 @@ export const BillDiscoveryPage: React.FC = () => {
   const handleFullScan = async () => {
     setIsScanning(true);
     setScanProgress(0);
+    setScanMessage("Initializing scan...");
 
-    // Simulate scanning progress
-    const steps = [
-      { progress: 20, message: "Connecting to email..." },
-      { progress: 40, message: "Scanning emails for bills..." },
-      { progress: 60, message: "Analyzing bank transactions..." },
-      { progress: 80, message: "Detecting patterns..." },
-      { progress: 100, message: "Discovery complete!" },
-    ];
+    try {
+      // Get connected accounts from localStorage
+      const emailAccounts = JSON.parse(
+        localStorage.getItem("emailAccounts") || "[]",
+      );
+      const bankTokens = JSON.parse(
+        localStorage.getItem("bankAccessTokens") || "[]",
+      );
 
-    for (const step of steps) {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      setScanProgress(step.progress);
-    }
+      if (emailAccounts.length === 0 && bankTokens.length === 0) {
+        toast({
+          title: "No Accounts Connected",
+          description: "Please connect your email or bank accounts first",
+          variant: "destructive",
+        });
+        setIsScanning(false);
+        return;
+      }
 
-    setTimeout(() => {
+      const result = await billDetectionService.detectAllBills(
+        emailAccounts,
+        bankTokens,
+        (progress) => {
+          setScanProgress(progress.progress);
+          setScanMessage(progress.message);
+        },
+      );
+
+      // Update stats with real results
+      setDiscoveryStats({
+        totalBillsFound: result.stats.totalBillsFound,
+        emailBillsFound: result.stats.emailBillsFound,
+        bankBillsFound: result.stats.bankBillsFound,
+        potentialSavings: result.stats.potentialSavings,
+        subscriptionsFound: result.stats.subscriptionsFound,
+        duplicatesFound: result.stats.duplicatesFound,
+      });
+
+      // Update discovered bills
+      setDiscoveredBills(
+        result.bills.map((bill) => ({
+          id: bill.id,
+          name: bill.name,
+          amount: bill.amount,
+          dueDate: bill.dueDate || new Date().toISOString(),
+          category: bill.category,
+          source: bill.source,
+          confidence: bill.confidence,
+          isRecurring: bill.isRecurring,
+          lastPaid: bill.lastPaid,
+          status: bill.status,
+        })),
+      );
+
+      toast({
+        title: "Discovery Complete!",
+        description: `Found ${result.stats.totalBillsFound} bills across your accounts`,
+      });
+
+      if (result.errors && result.errors.length > 0) {
+        console.warn("Discovery errors:", result.errors);
+      }
+    } catch (error) {
+      console.error("Full scan error:", error);
+      toast({
+        title: "Scan Failed",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to complete bill discovery",
+        variant: "destructive",
+      });
+    } finally {
       setIsScanning(false);
       setScanProgress(0);
-    }, 1000);
+      setScanMessage("");
+    }
   };
 
   return (
