@@ -144,29 +144,27 @@ export const EmailIntegration: React.FC = () => {
   });
 
   const handleConnectAccount = (provider: "gmail" | "outlook" | "yahoo") => {
-    // Simulate OAuth flow
-    const newAccount: EmailAccount = {
-      id: Date.now().toString(),
-      email: `user@${provider}.com`,
-      provider,
-      status: "connecting",
-      lastSync: new Date().toISOString(),
-      billsFound: 0,
-      autoSync: true,
-    };
-
-    setEmailAccounts((prev) => [...prev, newAccount]);
-
-    // Simulate connection process
-    setTimeout(() => {
-      setEmailAccounts((prev) =>
-        prev.map((account) =>
-          account.id === newAccount.id
-            ? { ...account, status: "connected", billsFound: 8 }
-            : account,
-        ),
-      );
-    }, 3000);
+    try {
+      if (provider === "gmail") {
+        const authUrl = emailService.generateAuthUrl();
+        window.location.href = authUrl;
+      } else if (provider === "outlook") {
+        const authUrl = outlookService.generateAuthUrl();
+        window.location.href = authUrl;
+      } else {
+        toast({
+          title: "Coming Soon",
+          description: "Yahoo integration will be available soon!",
+        });
+      }
+    } catch (error) {
+      console.error("OAuth error:", error);
+      toast({
+        title: "Connection Error",
+        description: "Failed to start OAuth flow",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleScanAccount = async (accountId: string) => {
