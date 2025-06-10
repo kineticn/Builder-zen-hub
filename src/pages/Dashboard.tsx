@@ -692,6 +692,62 @@ const Dashboard: React.FC = () => {
           </motion.div>
         )}
 
+        {/* Bill Discovery Feature */}
+        <motion.div
+          initial={shouldReduceMotion ? {} : { opacity: 0, y: 20 }}
+          animate={shouldReduceMotion ? {} : { opacity: 1, y: 0 }}
+          transition={{ delay: shouldReduceMotion ? 0 : 0.1 }}
+          className="bg-gradient-to-r from-teal-50 to-blue-50 border border-teal-200 rounded-lg p-6 mb-6"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="h-12 w-12 bg-teal-100 rounded-lg flex items-center justify-center">
+                <Zap className="h-6 w-6 text-teal-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-1">
+                  Discover Hidden Bills
+                </h3>
+                <p className="text-sm text-gray-600 max-w-md">
+                  Let BillBuddy automatically find bills from your emails and
+                  bank transactions. Most users discover 3-5 bills they forgot
+                  about!
+                </p>
+                <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
+                  <span className="flex items-center space-x-1">
+                    <CheckCircle className="h-3 w-3 text-green-600" />
+                    <span>Bank-level security</span>
+                  </span>
+                  <span className="flex items-center space-x-1">
+                    <Sparkles className="h-3 w-3 text-purple-600" />
+                    <span>AI-powered detection</span>
+                  </span>
+                  <span className="flex items-center space-x-1">
+                    <Clock className="h-3 w-3 text-blue-600" />
+                    <span>Setup in minutes</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center space-x-3">
+              <div className="text-right hidden sm:block">
+                <p className="text-sm font-medium text-gray-900">
+                  23 bills found
+                </p>
+                <p className="text-xs text-gray-500">for similar users</p>
+              </div>
+              <Button
+                onClick={() => navigate("/bill-discovery")}
+                className="bg-teal-600 hover:bg-teal-700 flex items-center space-x-2"
+              >
+                <Zap className="h-4 w-4" />
+                <span>Start Discovery</span>
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </motion.div>
+
         {/* Overdue Bills Alert */}
         {filteredBills.filter((b) => b.status === "overdue").length > 0 && (
           <motion.div
