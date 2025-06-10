@@ -49,6 +49,7 @@ const App = () => (
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/add-bill" element={<AddBillPage />} />
               <Route path="/bill-discovery" element={<BillDiscoveryPage />} />
+              <Route path="/oauth/callback" element={<OAuthCallback />} />
               <Route path="/bill/:id" element={<BillDetail />} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route
