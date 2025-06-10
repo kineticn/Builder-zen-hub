@@ -271,8 +271,8 @@ export const BillDiscoveryPage: React.FC = () => {
                 </div>
                 <Progress value={scanProgress} className="h-2" />
                 <p className="text-sm text-teal-700">
-                  This may take a few minutes as we analyze your emails and
-                  transactions.
+                  {scanMessage ||
+                    "This may take a few minutes as we analyze your emails and transactions."}
                 </p>
               </div>
             </CardContent>
