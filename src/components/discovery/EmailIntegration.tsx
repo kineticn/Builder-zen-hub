@@ -62,6 +62,17 @@ interface EmailBill {
 }
 
 export const EmailIntegration: React.FC = () => {
+  const { toast } = useToast();
+
+  // Load accounts from localStorage on mount
+  useEffect(() => {
+    const savedAccounts = localStorage.getItem("emailAccounts");
+    if (savedAccounts) {
+      const accounts = JSON.parse(savedAccounts);
+      setEmailAccounts(accounts);
+    }
+  }, []);
+
   const [emailAccounts, setEmailAccounts] = useState<EmailAccount[]>([
     {
       id: "1",
