@@ -168,27 +168,76 @@ export const EmailIntegration: React.FC = () => {
   };
 
   const handleScanAccount = async (accountId: string) => {
+    const account = emailAccounts.find((acc) => acc.id === accountId);
+    if (!account) return;
+
     setIsScanning(true);
     setScanProgress(0);
 
-    // Simulate scanning process
-    const steps = [
-      { progress: 20, message: "Connecting to email server..." },
-      { progress: 40, message: "Analyzing recent emails..." },
-      { progress: 60, message: "Detecting bill patterns..." },
-      { progress: 80, message: "Extracting bill information..." },
-      { progress: 100, message: "Scan complete!" },
-    ];
+    try {
+      const realAccount = {
+        id: account.id,
+        email: account.email,
+        provider: account.provider as "gmail" | "outlook",
+        accessToken: "stored_access_token", // In production, get from secure storage
+        refreshToken: "stored_refresh_token",
+      };
 
-    for (const step of steps) {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setScanProgress(step.progress);
-    }
+      const discoveredBills = await billDetectionService.scanEmailAccount(
+        realAccount,
+        (progress) => {
+          setScanProgress(progress.progress);
+        },
+      );
 
-    setTimeout(() => {
+      // Update discovered bills
+      setDiscoveredBills((prev) => [
+        ...prev.filter((bill) => bill.id.includes(account.email)),
+        ...discoveredBills.map((bill) => ({
+          id: bill.id,
+          subject: bill.description || `Bill from ${bill.name}`,
+          sender: `${bill.name} <billing@${bill.name.toLowerCase().replace(/\s+/g, "")}.com>`,
+          amount: bill.amount,
+          dueDate: bill.dueDate,
+          confidence: bill.confidence,
+          category: bill.category,
+          receivedDate: new Date().toISOString(),
+          status: bill.status as "new" | "confirmed" | "ignored",
+          emailPreview: `Your ${bill.name} bill is ready. Amount due: $${bill.amount}`,
+        })),
+      ]);
+
+      // Update account with bills count
+      setEmailAccounts((prev) =>
+        prev.map((acc) =>
+          acc.id === accountId
+            ? {
+                ...acc,
+                billsFound: discoveredBills.length,
+                lastSync: new Date().toISOString(),
+              }
+            : acc,
+        ),
+      );
+
+      toast({
+        title: "Scan Complete",
+        description: `Found ${discoveredBills.length} bills in ${account.email}`,
+      });
+    } catch (error) {
+      console.error("Email scan error:", error);
+      toast({
+        title: "Scan Failed",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to scan email account",
+        variant: "destructive",
+      });
+    } finally {
       setIsScanning(false);
       setScanProgress(0);
-    }, 1000);
+    }
   };
 
   const handleToggleAutoSync = (accountId: string, enabled: boolean) => {
