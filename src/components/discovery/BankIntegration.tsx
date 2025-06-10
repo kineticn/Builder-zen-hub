@@ -529,13 +529,11 @@ export const BankIntegration: React.FC = () => {
                   bills from transaction patterns
                 </p>
               </div>
-              <Button
-                onClick={handleConnectBank}
-                className="bg-teal-600 hover:bg-teal-700 flex items-center space-x-2"
-              >
-                <Shield className="h-4 w-4" />
-                <span>Connect with Plaid</span>
-              </Button>
+              <PlaidLinkComponent
+                userId="current-user-id"
+                onSuccess={handlePlaidSuccess}
+                onError={handlePlaidError}
+              />
               <div className="flex items-center justify-center space-x-4 text-xs text-gray-500">
                 <div className="flex items-center space-x-1">
                   <Shield className="h-3 w-3" />
