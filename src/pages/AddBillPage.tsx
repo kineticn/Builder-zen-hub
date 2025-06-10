@@ -634,4 +634,4 @@ const AddBillPage: React.FC = () => {
   );
 };
 
-export default AddBillPage;
+export { AddBillPage };
