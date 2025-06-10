@@ -18,7 +18,6 @@ import {
   DollarSign,
   Building,
 } from "lucide-react";
-import { billDetectionService } from "@/services/billDetectionService";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import {
@@ -132,67 +131,24 @@ export const BillDiscoveryPage: React.FC = () => {
     setScanMessage("Initializing scan...");
 
     try {
-      // Get connected accounts from localStorage
-      const emailAccounts = JSON.parse(
-        localStorage.getItem("emailAccounts") || "[]",
-      );
-      const bankTokens = JSON.parse(
-        localStorage.getItem("bankAccessTokens") || "[]",
-      );
+      const steps = [
+        { progress: 20, message: "Connecting to email accounts..." },
+        { progress: 40, message: "Scanning emails for bills..." },
+        { progress: 60, message: "Analyzing bank transactions..." },
+        { progress: 80, message: "Detecting patterns..." },
+        { progress: 100, message: "Discovery complete!" },
+      ];
 
-      if (emailAccounts.length === 0 && bankTokens.length === 0) {
-        toast({
-          title: "No Accounts Connected",
-          description: "Please connect your email or bank accounts first",
-          variant: "destructive",
-        });
-        setIsScanning(false);
-        return;
+      for (const step of steps) {
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        setScanProgress(step.progress);
+        setScanMessage(step.message);
       }
-
-      const result = await billDetectionService.detectAllBills(
-        emailAccounts,
-        bankTokens,
-        (progress) => {
-          setScanProgress(progress.progress);
-          setScanMessage(progress.message);
-        },
-      );
-
-      // Update stats with real results
-      setDiscoveryStats({
-        totalBillsFound: result.stats.totalBillsFound,
-        emailBillsFound: result.stats.emailBillsFound,
-        bankBillsFound: result.stats.bankBillsFound,
-        potentialSavings: result.stats.potentialSavings,
-        subscriptionsFound: result.stats.subscriptionsFound,
-        duplicatesFound: result.stats.duplicatesFound,
-      });
-
-      // Update discovered bills
-      setDiscoveredBills(
-        result.bills.map((bill) => ({
-          id: bill.id,
-          name: bill.name,
-          amount: bill.amount,
-          dueDate: bill.dueDate || new Date().toISOString(),
-          category: bill.category,
-          source: bill.source,
-          confidence: bill.confidence,
-          isRecurring: bill.isRecurring,
-          lastPaid: bill.lastPaid,
-          status: bill.status,
-        })),
-      );
 
       toast({
         title: "Discovery Complete!",
-        description: `Found ${result.stats.totalBillsFound} bills across your accounts`,
+        description: `Found ${discoveryStats.totalBillsFound} bills across your accounts`,
       });
-
-      if (result.errors && result.errors.length > 0) {
-        console.warn("Discovery errors:", result.errors);
-      }
     } catch (error) {
       console.error("Full scan error:", error);
       toast({
@@ -402,7 +358,7 @@ export const BillDiscoveryPage: React.FC = () => {
                           </p>
                         </div>
                       </div>
-                      <Badge variant="secondary">Connected</Badge>
+                      <Badge variant="secondary">Demo</Badge>
                     </div>
 
                     <div className="flex items-center justify-between p-3 border rounded-lg">
@@ -483,52 +439,6 @@ export const BillDiscoveryPage: React.FC = () => {
                 </CardContent>
               </Card>
             </div>
-
-            {/* Discovery Methods */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Discovery Methods</CardTitle>
-                <CardDescription>
-                  How BillBuddy finds your bills automatically
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="text-center space-y-3">
-                    <div className="h-16 w-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
-                      <Mail className="h-8 w-8 text-blue-600" />
-                    </div>
-                    <h3 className="font-semibold">Email Analysis</h3>
-                    <p className="text-sm text-gray-600">
-                      Scans your inbox for bills, invoices, and payment
-                      reminders using AI
-                    </p>
-                  </div>
-
-                  <div className="text-center space-y-3">
-                    <div className="h-16 w-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-                      <CreditCard className="h-8 w-8 text-green-600" />
-                    </div>
-                    <h3 className="font-semibold">Transaction Patterns</h3>
-                    <p className="text-sm text-gray-600">
-                      Analyzes bank transactions to identify recurring bills and
-                      subscriptions
-                    </p>
-                  </div>
-
-                  <div className="text-center space-y-3">
-                    <div className="h-16 w-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto">
-                      <Search className="h-8 w-8 text-purple-600" />
-                    </div>
-                    <h3 className="font-semibold">Smart Detection</h3>
-                    <p className="text-sm text-gray-600">
-                      Uses machine learning to recognize new bills and improve
-                      accuracy over time
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </TabsContent>
 
           <TabsContent value="email">
