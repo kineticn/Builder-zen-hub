@@ -212,7 +212,7 @@ export const EmailIntegration: React.FC = () => {
   const getProviderIcon = (provider: string) => {
     switch (provider) {
       case "gmail":
-        return <Gmail className="h-5 w-5 text-red-600" />;
+        return <Mail className="h-5 w-5 text-red-600" />;
       case "outlook":
         return <Mail className="h-5 w-5 text-blue-600" />;
       case "yahoo":
